@@ -1,8 +1,8 @@
-# Rizan Felez CNC Data Logger
+# CNC Data Logger
 
 ## Overview
 
-Rizan Felez CNC Data Logger is an industrial data acquisition and processing platform designed for CNC production environments.
+CNC Data Logger is an industrial data acquisition and processing platform designed for CNC production environments.
 
 The system collects binary packets from CNC controller boards over TCP, decodes machine events, stores raw data in a SQLite database, processes production sessions, monitors network health, and provides a real-time web dashboard for monitoring machine status and exporting production data.
 
@@ -498,13 +498,5 @@ Areas of improvement:
 
 ---
 
-## License
-
-No license specified.
-
-```
-Copyright © Rizan Felez
-All rights reserved unless stated otherwise.
-```
 
 ---
