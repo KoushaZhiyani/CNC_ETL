@@ -101,64 +101,6 @@ class CNCSessionManager:
         
         return f"Board-{ip_suffix}"
 
-    # def process_log(self, ip_address, log_line):
-    #     parsed_packets = self.parse_device_hex_log(log_line)
-    #     for data in parsed_packets:
-    #         msg_id = data["ID"]
-            
-    #         # 1. بروزرسانی داشبورد
-    #         self.update_board_last_log(ip_address, f"ID: {msg_id:#04x}", data)
-            
-    #         # 2. آماده‌سازی دیتا و ارسال به صف حافظه (ثبت خام در WAL)
-    #         device_name = self.get_device_name(ip_address)
-    #         decoded_json = json.dumps(data)
-    #         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
-    #         self.log_queue.put((str(ip_address), device_name, msg_id, decoded_json, current_time))
-            
-    #         # تمام منطق سشن‌ها و درج مستقیم در ProductionSessions از اینجا حذف شد
-    #         if msg_id == 0x03:
-    #             # خواندن اطلاعات ذخیره شده دستگاه از سشن فعلی
-    #             board_info = self.boards_status.get(ip_address, {})
-    #             session_logs = board_info.get("session_logs", [])
-                
-    #             person_name = "نامشخص"
-    #             start_time = "نامشخص"
-                
-    #             # جستجو در لاگ‌های سشن فعلی برای پیدا کردن پکت شروع (0x01)
-    #             for log in session_logs:
-    #                 if log.get("ID") == 0x01:
-    #                     # اولویت با نام پرسنل است، اگر نبود کد پرسنلی را می‌گیریم
-    #                     person_name = log.get("PersonnelName", log.get("Personnel", "نامشخص"))
-    #                     start_time = log.get("Time", "نامشخص")
-    #                     break
-
-    #             end_time = datetime.now().strftime("%H:%M:%S") # زمان دریافت پکت 0x03 به عنوان پایان
-                
-    #             # استخراج کدهای توقف از خود پکت 0x03
-    #             device_stop = data.get('DeviceStopCode', 'نامشخص')
-    #             person_stop = data.get('PersonStopCode', 'نامشخص')
-                
-    #             if isinstance(person_stop, (int, float)):
-    #                 person_stop_display = f"{person_stop / 100}"
-    #             else:
-    #                 person_stop_display = "نامشخص"
-                
-    #             # ساخت متن پیامک
-    #             sms_text = (
-    #                 f"⚠️ هشدار توقف دستگاه\n"
-    #                 f"دستگاه: {device_name}\n"
-    #                 f"پرسنل: {person_name}\n"
-    #                 f"زمان شروع: {start_time}\n"
-    #                 f"زمان توقف: {end_time}\n"
-    #                 f"کد توقف دستگاه: {device_stop}\n"
-    #                 f"کد توقف پرسنل: {person_stop_display}\n"
-    #                 f"واحد IT - کوشا ژیانی"
-    #             ) 
-
-    #             threading.Thread(target=self.send_sms_ir, args=(sms_text,), daemon=True).start()
-
-
     def process_log(self, ip_address, log_line):
         parsed_packets = self.parse_device_hex_log(log_line)
         for data in parsed_packets:
@@ -174,6 +116,48 @@ class CNCSessionManager:
             
             self.log_queue.put((str(ip_address), device_name, msg_id, decoded_json, current_time))
             
+            # تمام منطق سشن‌ها و درج مستقیم در ProductionSessions از اینجا حذف شد
+            if msg_id == 0x03:
+                # خواندن اطلاعات ذخیره شده دستگاه از سشن فعلی
+                board_info = self.boards_status.get(ip_address, {})
+                session_logs = board_info.get("session_logs", [])
+                
+                person_name = "نامشخص"
+                start_time = "نامشخص"
+                
+                # جستجو در لاگ‌های سشن فعلی برای پیدا کردن پکت شروع (0x01)
+                for log in session_logs:
+                    if log.get("ID") == 0x01:
+                        # اولویت با نام پرسنل است، اگر نبود کد پرسنلی را می‌گیریم
+                        person_name = log.get("PersonnelName", log.get("Personnel", "نامشخص"))
+                        start_time = log.get("Time", "نامشخص")
+                        break
+
+                end_time = datetime.now().strftime("%H:%M:%S") # زمان دریافت پکت 0x03 به عنوان پایان
+                
+                # استخراج کدهای توقف از خود پکت 0x03
+                device_stop = data.get('DeviceStopCode', 'نامشخص')
+                person_stop = data.get('PersonStopCode', 'نامشخص')
+                
+                if isinstance(person_stop, (int, float)):
+                    person_stop_display = f"{person_stop / 100}"
+                else:
+                    person_stop_display = "نامشخص"
+                
+                # ساخت متن پیامک
+                sms_text = (
+                    f"⚠️ هشدار توقف دستگاه\n"
+                    f"دستگاه: {device_name}\n"
+                    f"پرسنل: {person_name}\n"
+                    f"زمان شروع: {start_time}\n"
+                    f"زمان توقف: {end_time}\n"
+                    f"کد توقف دستگاه: {device_stop}\n"
+                    f"کد توقف پرسنل: {person_stop_display}\n"
+                    f"واحد IT - کوشا ژیانی"
+                ) 
+
+                threading.Thread(target=self.send_sms_ir, args=(sms_text,), daemon=True).start()
+
 
 
     def _db_worker(self):
