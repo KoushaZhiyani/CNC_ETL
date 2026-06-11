@@ -484,13 +484,13 @@ class CNCSessionManager:
         try:
             url = "https://api.sms.ir/v1/send/bulk"
             headers = {
-                "X-API-KEY": "PBapxUHXiM0iPFlMp0r6jCXTxT7XdvDBBtoHb8T7gRApq9cQ",
+                "X-API-KEY": "PBapxUHXiM0iPFlMp0r6jCXTxT7XdvDBBtoHb8T7g",
                 "Content-Type": "application/json"
             }
             payload = {
-                "lineNumber": 30002128001557,
+                "lineNumber": 3000212,
                 "messageText": message,
-                "mobiles": ["09394413663"],
+                "mobiles": ["093944"],
                 "sendDateTime": None
             }
             r = requests.post(url, json=payload, headers=headers, timeout=5)
