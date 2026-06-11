@@ -1,9 +1,49 @@
-# Architecture Overview
+# Rizan Felez CNC Data Logger
 
-The system consists of four main components:
+## Overview
 
-```markdown
+Rizan Felez CNC Data Logger is an industrial data acquisition and processing platform designed for CNC production environments.
 
+The system collects binary packets from CNC controller boards over TCP, decodes machine events, stores raw data in a SQLite database, processes production sessions, monitors network health, and provides a real-time web dashboard for monitoring machine status and exporting production data.
+
+The architecture follows a multi-stage ETL pipeline:
+
+1. CNC devices send binary packets via TCP.
+2. The server receives and reconstructs packets.
+3. Packets are decoded into structured events.
+4. Raw events are stored in a Write-Ahead Log (WAL) database table.
+5. Session processing logic converts raw events into production sessions.
+6. A Flask dashboard displays machine status and allows Excel exports.
+7. A network watchdog detects large-scale network outages and recovery events.
+
+---
+
+## Main Features
+
+- Asynchronous TCP server for CNC device communication
+- Automatic packet reconstruction from network streams
+- Binary packet decoding and validation
+- Real-time machine connection monitoring
+- SQLite-based event logging with WAL mode
+- Background batch database writer
+- Production session reconstruction engine
+- Intelligent handling of delayed and out-of-order packets
+- Pending packet recovery mechanism
+- Automatic session closure for stale sessions
+- Real-time Flask monitoring dashboard
+- Excel export for historical production data
+- CNC device name mapping from database
+- SMS alerts on machine stop events
+- Network outage detection and recovery monitoring
+- Reconnection marker generation for downstream processing
+- Thread-safe architecture
+- Extensive logging and diagnostics
+
+---
+
+## Architecture Overview
+
+```text
 ┌─────────────────┐
 │ CNC Devices     │
 └────────┬────────┘
@@ -16,259 +56,455 @@ The system consists of four main components:
          │
          ▼
 ┌─────────────────┐
-│ Decoder Engine  │
+│ Packet Decoder  │
 │ (decoder.py)    │
 └────────┬────────┘
          │
          ▼
 ┌─────────────────┐
-│ Queue Buffer    │
+│ WAL_DECODED     │
+│ SQLite Database │
 └────────┬────────┘
          │
          ▼
 ┌─────────────────┐
-│ SQLite WAL DB   │
+│ Session Engine  │
+│ session_processor.py
 └────────┬────────┘
          │
-         ├────────────► Flask Dashboard
-         │                 (dashboard.py)
+         ▼
+┌─────────────────┐
+│ Production      │
+│ Sessions Table  │
+└────────┬────────┘
          │
-         └────────────► Reporting & Excel Export
+         ├──────────────► Excel Export
+         │
+         ▼
+┌─────────────────┐
+│ Flask Dashboard │
+│ dashboard.py    │
+└─────────────────┘
+
+Additional Services:
+
+┌─────────────────┐
+│ Network Watchdog│
+│ network_watchdog.py
+└─────────────────┘
 ```
 
-## Packet Processing Pipeline
+---
 
-Incoming packets follow the workflow below:
+## Packet Types
 
-### 1. TCP Connection Establishment
+The system currently supports the following CNC packet types:
 
-A CNC board connects to the TCP server. The server:
+| Packet ID | Description |
+|------------|-------------|
+| 0x01 | Session Start |
+| 0x02 | Production Count |
+| 0x03 | Machine Stop |
+| 0x04 | Scrap / Rework |
+| 0x05 | Form Data |
+| 400 | Network Reconnection Marker |
 
-- Registers the connection
-- Updates dashboard status
-- Marks the board as online
-- Tracks active connections per IP
+### Packet 0x01
 
-### 2. Stream Buffering
+Contains:
 
-TCP is stream-based and does not guarantee packet boundaries. To avoid corrupted packet parsing:
+- Personnel ID
+- Part Code
+- Process Code
 
-- Incoming bytes are accumulated in a dedicated buffer.
-- The server continuously searches for a valid packet header.
-- Partial packets remain in the buffer until enough bytes arrive.
+Used to create a new production session.
 
-This prevents:
+### Packet 0x02
 
-- Packet fragmentation issues
-- Incomplete packet decoding
-- Stream synchronization errors
+Contains:
 
-### 3. Packet Validation
+- Production count
 
-Each packet is validated using:
+Used to increment production quantity.
 
-- Magic Header
-- Packet ID
-- Payload Length
-- Payload Data
+### Packet 0x03
 
-The server calculates the total packet size before processing. Packets are ignored until fully received. This protects against:
+Contains:
 
-- Truncated packets
-- Invalid payload lengths
-- Network transmission anomalies
+- Device stop code
+- Personnel stop code
 
-### 4. Packet Decoding
+Used to close production sessions and trigger SMS alerts.
 
-Decoded packet types include:
+### Packet 0x04
 
-| ID   | Description            |
-|------|------------------------|
-| 0x01 | Production Start       |
-| 0x02 | Production Counter     |
-| 0x03 | Machine Stop Event     |
-| 0x04 | Scrap/Rework Report    |
-| 0x05 | Forms Information      |
+Contains:
 
-The decoder extracts structured information from raw binary payloads and converts them into JSON-compatible objects.
+- Scrap quantity
+- Rework quantity
 
-### 5. Dashboard Update
+Updates quality-related metrics.
 
-After decoding:
+### Packet 0x05
 
-- Device status is updated
-- Last packet type is recorded
-- Last activity timestamp is refreshed
-- Session logs are updated
+Contains:
 
-Dashboard data remains completely independent from database operations.
+- Form data pairs
 
-### 6. Queue-Based Persistence
+Stores process-specific form information.
 
-Instead of writing directly to the database:
+### Packet 400
+
+Generated by the network watchdog after network recovery.
+
+Used as a synchronization marker for delayed packet recovery and session reconstruction.
+
+---
+
+## Reliability and Data Integrity Mechanisms
+
+The system includes several mechanisms to improve reliability in industrial environments.
+
+### Stream Reassembly
+
+TCP streams may split packets across multiple reads.
+
+The server:
+
+- Buffers incoming bytes
+- Searches for packet headers
+- Reconstructs complete packets before processing
+
+### Packet Recovery
+
+If packets arrive before a session start packet:
+
+- They are stored in `PendingPackets`
+- Automatically attached when the corresponding start packet arrives
+
+### Network Recovery Logic
+
+When a network outage occurs:
+
+- The watchdog monitors all CNC boards
+- A special Packet 400 is inserted upon reconnection
+- Delayed packets are reordered intelligently
+
+### Out-of-Order Packet Correction
+
+The session processor can detect:
 
 ```text
-Packet
-   ↓
-Memory Queue
-   ↓
-Background DB Worker
-   ↓
-SQLite
+Packet 2 arrives first
+Packet 1 arrives later
 ```
 
-This design prevents database operations from blocking packet reception.
+and automatically correct ordering when timing conditions indicate network delay.
 
-**Benefits:**
+### Batch Database Writes
 
-- Higher throughput
-- Lower latency
-- Better scalability
-- Reduced packet loss risk
+Database operations are performed through:
 
-### 7. Batch Database Writes
+- Background worker thread
+- Queue-based ingestion
+- Batch inserts (up to 100 records)
 
-The DB worker collects up to 100 records before insertion.
+Benefits:
 
-**Benefits:**
+- Reduced disk I/O
+- Better throughput
+- Improved scalability
 
-- Fewer disk operations
-- Faster database performance
-- Reduced SQLite locking
+### Auto Session Closure
 
-## Reliability and Fault-Tolerance Mechanisms
+Sessions remaining in:
 
-### Connection Health Monitoring
-
-A periodic health checker runs every second. The checker:
-
-- Sends keep-alive bytes
-- Detects dead sockets
-- Removes disconnected clients
-- Updates dashboard status
-
-This prevents stale connections from remaining active.
-
-### Multi-Connection IP Tracking
-
-The system maintains a connection counter per IP address. A device is considered offline only when:
-
-```
-Active Connections = 0
+```text
+In Progress
 ```
 
-This avoids false disconnect events when multiple sockets are used by the same board.
+for more than 24 hours are automatically marked:
 
-### Stream Re-Synchronization
-
-If a valid packet header is not found:
-
-- Old bytes are discarded
-- The last possible header bytes are retained
-
-This mechanism allows automatic recovery from:
-
-- Corrupted streams
-- Noise bytes
-- Misaligned packets
-
-...without restarting the server.
-
-### SQLite WAL Mode
-
-The database operates in:
-
-```sql
-PRAGMA journal_mode=WAL;
+```text
+Auto-Closed
 ```
 
-**Advantages:**
+---
 
-- Better concurrent access
-- Faster writes
-- Reduced locking
-- Improved crash recovery
+## Prerequisites
 
-### Producer-Consumer Pattern
+### Software
 
-The application implements a Producer-Consumer architecture:
+- Python 3.10+
+- SQLite 3
+- Windows (primary target environment)
 
-- **Producer:** TCP Server
-- **Consumer:** Database Worker Thread
+### Python Libraries
 
-**Benefits:**
+Install the following packages:
 
-- Decoupled processing
-- Stable performance under burst traffic
-- Improved responsiveness
-
-### Thread Isolation
-
-The application separates critical workloads:
-
-| Component          | Execution Model     |
-|--------------------|---------------------|
-| TCP Server         | AsyncIO             |
-| Dashboard          | Dedicated Thread    |
-| Database Worker    | Dedicated Thread    |
-| Network Watchdog   | Independent Process |
-
-This prevents one subsystem from blocking another.
-
-## Network Watchdog
-
-The project includes an independent network monitoring service.
-
-**Responsibilities:**
-
-- Periodically ping all CNC boards
-- Detect large-scale network outages
-- Detect network recovery events
-- Insert recovery markers into the database
-
-### Outage Detection Strategy
-
-The watchdog does not require every device to be online. Instead, configurable thresholds are used.
-
-```
-If many boards become unreachable:
-    Network = DOWN
-
-If enough boards return:
-    Network = UP
+```bash
+pip install flask
+pip install pandas
+pip install openpyxl
+pip install requests
 ```
 
-This approach avoids false alarms caused by:
+Or:
 
-- Individual machine shutdowns
-- Maintenance operations
-- Device reboots
-
-### Recovery Marker Injection
-
-When network connectivity is restored:
-
-```
-Packet ID = 400
+```bash
+pip install flask pandas openpyxl requests
 ```
 
-is automatically inserted into the database. This marker can later be used by analytics and reporting systems to:
+---
 
-- Detect communication gaps
-- Rebuild production timelines
-- Handle delayed packets correctly
+## Installation
 
-## Performance Characteristics
+### Clone Repository
 
-- **Non-Blocking Architecture:** The server never waits for database operations while receiving packets.
-- **Asynchronous Networking:** Uses Python AsyncIO for handling multiple CNC devices simultaneously.
-- **Batched Persistence:** Database writes are grouped to minimize I/O overhead.
-- **Memory-Based Queueing:** Temporary spikes in incoming traffic can be absorbed without packet loss.
+```bash
+git clone https://github.com/your-username/cnc-datalogger.git
+cd cnc-datalogger
+```
 
-## Known Limitations
+### Install Dependencies
 
-- SQLite may become a bottleneck under very high throughput.
-- Database path is currently hardcoded.
-- Device IP list in the watchdog is manually maintained.
-- No authentication layer is currently implemented for TCP clients.
-- No TLS encryption is used for CNC communications.
+```bash
+pip install -r requirements.txt
+```
+
+If no requirements file exists:
+
+```bash
+pip install flask pandas openpyxl requests
+```
+
+### Configure Database
+
+Update database path in:
+
+```python
+decoder.py
+session_processor.py
+network_watchdog.py
+```
+
+Example:
+
+```python
+DB_PATH = r"D:\folder_project_city\CounterCNC\database_customer_club_test.db"
+```
+
+### Configure Server IP
+
+Edit:
+
+```python
+main.py
+```
+
+```python
+self.host = "192.168.1.3"
+```
+
+---
+
+## Running the System
+
+### Start Main Data Logger
+
+```bash
+python main.py
+```
+
+This launches:
+
+- Async TCP Server
+- Decoder Engine
+- Database Writer
+- Flask Dashboard
+
+### Start Session Processor
+
+```bash
+python session_processor.py
+```
+
+### Start Network Watchdog
+
+```bash
+python network_watchdog.py
+```
+
+---
+
+## Project Structure
+
+```text
+project/
+│
+├── main.py
+│   Async TCP server
+│
+├── decoder.py
+│   Packet decoding and event processing
+│
+├── session_processor.py
+│   Production session reconstruction engine
+│
+├── dashboard.py
+│   Flask monitoring dashboard
+│
+├── network_watchdog.py
+│   Network monitoring and recovery detection
+│
+├── templates/
+│   HTML dashboard templates
+│
+└── database/
+    SQLite database
+```
+
+---
+
+## Usage
+
+### Real-Time Monitoring
+
+Open:
+
+```text
+http://localhost:5000
+```
+
+Dashboard displays:
+
+- Device status
+- Last packet information
+- Connection state
+- Session activity
+
+### Excel Export
+
+Open:
+
+```text
+http://localhost:5000/export-page
+```
+
+Select:
+
+- Start date
+- End date
+
+The system generates:
+
+```text
+export_YYYY-MM-DD_to_YYYY-MM-DD.xlsx
+```
+
+### API Endpoints
+
+#### Board Status
+
+```http
+GET /api/boards
+```
+
+Example response:
+
+```json
+{
+  "192.168.1.101": {
+    "device_name": "CNC-01",
+    "is_connected": true,
+    "last_seen": "2026-06-10 12:30:01"
+  }
+}
+```
+
+#### Excel Export
+
+```http
+GET /api/export-excel?start_date=2026-06-01&end_date=2026-06-10
+```
+
+---
+
+## Database Tables
+
+### WAL_DECODED
+
+Stores raw decoded packets.
+
+### ProductionSessions
+
+Stores reconstructed production sessions.
+
+### PendingPackets
+
+Temporary storage for orphan packets.
+
+### mapping_device_counter
+
+Maps IP addresses to machine names.
+
+### users
+
+Personnel information.
+
+### part_code
+
+Part code definitions.
+
+---
+
+## Contribution
+
+Contributions are welcome.
+
+Recommended workflow:
+
+1. Fork the repository
+2. Create a feature branch
+
+```bash
+git checkout -b feature/new-feature
+```
+
+3. Commit changes
+
+```bash
+git commit -m "Add new feature"
+```
+
+4. Push branch
+
+```bash
+git push origin feature/new-feature
+```
+
+5. Open a Pull Request
+
+Areas of improvement:
+
+- Docker support
+- Configuration management
+- Unit testing
+- API authentication
+- Dashboard enhancements
+- Database migration support
+- Multi-site deployment support
+
+---
+
+## License
+
+No license specified.
+
+```
+Copyright © Rizan Felez
+All rights reserved unless stated otherwise.
+```
+
+---
