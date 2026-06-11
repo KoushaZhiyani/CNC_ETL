@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نقشه کارگاه - وضعیت دستگاه‌ها</title>
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* محیط مستطیلی نقشه */
+        .map-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            background-color: #e0e0e0;
+            border: 3px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background-image: linear-gradient(#d0d0d0 1px, transparent 1px), linear-gradient(90deg, #d0d0d0 1px, transparent 1px);
+            background-size: 50px 50px; /* خطوط شطرنجی پس زمینه */
+        }
+
+        /* نقطه دستگاه */
+        .device-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #28a745; /* سبز برای حالت عادی */
+            border-radius: 50%;
+            transform: translate(-50%, -50%); /* مرکز نقطه روی مختصات باشد */
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+
+        .device-marker:hover {
+            transform: translate(-50%, -50%) scale(1.3);
+        }
+
+        .device-marker.error {
+            background-color: #dc3545; /* قرمز برای خطا/توقف */
+        }
+
+        /* پنجره اطلاعات (Tooltip) */
+        .info-box {
+            visibility: hidden;
+            position: absolute;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: right;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 12px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none; /* جلوگیری از پرش موس */
+        }
+
+        .info-box::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+        }
+
+        .device-marker:hover .info-box {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="map-container" id="map">
+        <!-- دستگاه‌ها توسط جاوا اسکریپت اینجا اضافه می‌شوند -->
+    </div>
+
+    <script>
+        // دیتای تستی دستگاه‌ها (این اطلاعات را می‌توانید بعدا از طریق API پایتون بگیرید)
+        const devices = [
+            { id: 1, name: "CNC دستگاه ۱", ip: "192.168.1.10", x: 20, y: 30, status: "active", person: "علی احمدی", code: "P-101" },
+            { id: 2, name: "CNC دستگاه ۲", ip: "192.168.1.11", x: 50, y: 30, status: "active", person: "رضا محمدی", code: "P-102" },
+            { id: 3, name: "CNC دستگاه ۳", ip: "192.168.1.12", x: 80, y: 30, status: "stopped", person: "حسین عباسی", code: "P-103" },
+            { id: 4, name: "برش دستگاه ۱", ip: "192.168.1.13", x: 35, y: 70, status: "active", person: "محمد کریمی", code: "P-104" },
+            { id: 5, name: "بسته‌بندی", ip: "192.168.1.14", x: 65, y: 70, status: "active", person: "سارا حسینی", code: "P-105" }
+        ];
+
+        const mapContainer = document.getElementById('map');
+
+        // تابع برای ایجاد دستگاه روی نقشه
+        devices.forEach(device => {
+            const marker = document.createElement('div');
+            marker.className = `device-marker ${device.status === 'stopped' ? 'error' : ''}`;
+            
+            // تنظیم مختصات (بر اساس درصد تا ریسپانسیو باشد)
+            marker.style.left = `${device.x}%`;
+            marker.style.top = `${device.y}%`;
+
+            // ساخت محتوای Info Box
+            const info = document.createElement('div');
+            info.className = 'info-box';
+            info.innerHTML = `
+                <strong>${device.name}</strong><br>
+                آی‌پی: <span dir="ltr">${device.ip}</span><br>
+                اپراتور: ${device.person}<br>
+                کد قطعه: ${device.code}<br>
+                وضعیت: ${device.status === 'active' ? 'در حال کار 🟢' : 'متوقف 🔴'}
+            `;
+
+            marker.appendChild(info);
+            mapContainer.appendChild(marker);
+        });
+    </script>
+
+</body>
+</html>

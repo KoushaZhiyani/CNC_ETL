@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>داشبورد مانیتورینگ CNC</title>
+
+  <style>
+        @font-face {
+            font-family: "Vazirmatn";
+            src: url("static/fonts/Vazirmatn-Regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* وزن متوسط (Medium) - برای هدر جدول و نشان‌ها */
+        @font-face {
+            font-family: "Vazirmatn";
+            src: url("static/fonts/Vazirmatn-Medium.woff2") format("woff2");
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* وزن ضخیم (Bold) - برای عناوین و اعداد اصلی */
+        @font-face {
+            font-family: "Vazirmatn";
+            src: url("static/fonts/Vazirmatn-Bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+:root {
+color-scheme: light;
+--bg: #f4f7fb;
+--bg-elevated: rgba(255,255,255,0.78);
+--bg-solid: #ffffff;
+--bg-soft: #f8fafc;
+--surface-2: #eef3f8;
+--text: #0f172a;
+--text-muted: #64748b;
+--text-soft: #94a3b8;
+--border: rgba(15, 23, 42, 0.08);
+--border-strong: rgba(15, 23, 42, 0.14);
+--shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+--shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.06);
+--primary: #2563eb;
+--primary-soft: rgba(37, 99, 235, 0.1);
+--success: #16a34a;
+--success-soft: rgba(22, 163, 74, 0.12);
+--danger: #dc2626;
+--danger-soft: rgba(220, 38, 38, 0.12);
+--warning: #d97706;
+--warning-soft: rgba(217, 119, 6, 0.12);
+--neutral: #475569;
+--neutral-soft: rgba(71, 85, 105, 0.1);
+--radius-xl: 24px;
+--radius-lg: 18px;
+--radius-md: 14px;
+--radius-sm: 10px;
+--container: 1440px;
+--topbar-height: 88px;
+}
+
+body.dark {
+color-scheme: dark;
+--bg: #08111f;
+--bg-elevated: rgba(12, 22, 38, 0.82);
+--bg-solid: #0c1626;
+--bg-soft: #101c2f;
+--surface-2: #132238;
+--text: #e5eefc;
+--text-muted: #94a3b8;
+--text-soft: #6b7b95;
+--border: rgba(148, 163, 184, 0.12);
+--border-strong: rgba(148, 163, 184, 0.2);
+--shadow: 0 16px 40px rgba(2, 8, 23, 0.45);
+--shadow-soft: 0 8px 24px rgba(2, 8, 23, 0.28);
+--primary: #60a5fa;
+--primary-soft: rgba(96, 165, 250, 0.14);
+--success: #22c55e;
+--success-soft: rgba(34, 197, 94, 0.14);
+--danger: #f87171;
+--danger-soft: rgba(248, 113, 113, 0.14);
+--warning: #f59e0b;
+--warning-soft: rgba(245, 158, 11, 0.14);
+--neutral: #94a3b8;
+--neutral-soft: rgba(148, 163, 184, 0.12);
+}
+
+* {
+box-sizing: border-box;
+}
+
+html {
+scroll-behavior: smooth;
+}
+
+body {
+margin: 0;
+font-family: "Vazirmatn", Tahoma, sans-serif;
+background:
+radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 24%),
+radial-gradient(circle at top left, rgba(22, 163, 74, 0.05), transparent 18%),
+var(--bg);
+color: var(--text);
+min-height: 100vh;
+transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+button,
+input,
+select {
+font: inherit;
+}
+
+.app-shell {
+max-width: var(--container);
+margin: 0 auto;
+padding: 24px;
+}
+
+.topbar {
+position: sticky;
+top: 12px;
+z-index: 40;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 18px;
+min-height: var(--topbar-height);
+padding: 18px 22px;
+margin-bottom: 22px;
+background: var(--bg-elevated);
+backdrop-filter: blur(18px);
+border: 1px solid var(--border);
+border-radius: var(--radius-xl);
+box-shadow: var(--shadow);
+}
+
+.topbar__main {
+display: flex;
+align-items: center;
+gap: 18px;
+min-width: 0;
+}
+
+.brand-badge {
+width: 52px;
+height: 52px;
+border-radius: 16px;
+display: grid;
+place-items: center;
+background:
+linear-gradient(135deg, var(--primary-soft), rgba(255,255,255,0)),
+var(--bg-soft);
+border: 1px solid var(--border);
+flex-shrink: 0;
+}
+
+.brand-badge svg {
+width: 28px;
+height: 28px;
+color: var(--primary);
+}
+
+.topbar__title {
+min-width: 0;
+}
+
+.topbar__title h1 {
+margin: 0;
+font-size: clamp(1.1rem, 1rem + 1vw, 1.65rem);
+font-weight: 800;
+letter-spacing: -0.02em;
+}
+
+.topbar__title p {
+margin: 6px 0 0;
+color: var(--text-muted);
+font-size: 0.92rem;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.topbar__actions {
+display: flex;
+align-items: center;
+gap: 12px;
+flex-wrap: wrap;
+justify-content: flex-end;
+}
+
+.status-pill {
+display: inline-flex;
+align-items: center;
+gap: 10px;
+padding: 10px 14px;
+border-radius: 999px;
+background: var(--bg-soft);
+border: 1px solid var(--border);
+color: var(--text);
+font-size: 0.92rem;
+font-weight: 600;
+white-space: nowrap;
+}
+
+.status-pill__dot {
+width: 10px;
+height: 10px;
+border-radius: 50%;
+background: var(--success);
+box-shadow: 0 0 0 6px var(--success-soft);
+flex-shrink: 0;
+}
+
+.status-pill__label {
+color: var(--text-muted);
+font-weight: 500;
+}
+
+.status-pill__value {
+color: var(--text);
+font-weight: 700;
+}
+
+.btn {
+height: 44px;
+border: 1px solid var(--border);
+background: var(--bg-solid);
+color: var(--text);
+border-radius: 14px;
+padding: 0 14px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+cursor: pointer;
+transition: 0.2s ease;
+box-shadow: var(--shadow-soft);
+}
+
+.btn:hover {
+transform: translateY(-1px);
+border-color: var(--border-strong);
+background: var(--bg-soft);
+}
+
+.btn:active {
+transform: translateY(0);
+}
+
+.btn--primary {
+background: var(--primary);
+color: #fff;
+border-color: transparent;
+box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+}
+
+.btn--primary:hover {
+background: #1d4ed8;
+}
+
+body.dark .btn--primary:hover {
+background: #3b82f6;
+}
+
+.btn svg {
+width: 18px;
+height: 18px;
+flex-shrink: 0;
+}
+
+.section {
+margin-bottom: 22px;
+}
+
+.section-header {
+display: flex;
+align-items: end;
+justify-content: space-between;
+gap: 16px;
+margin-bottom: 16px;
+}
+
+.section-title h2 {
+margin: 0;
+font-size: 1.15rem;
+font-weight: 800;
+letter-spacing: -0.01em;
+}
+
+.section-title p {
+margin: 6px 0 0;
+color: var(--text-muted);
+font-size: 0.92rem;
+}
+
+.summary-grid {
+display: grid;
+grid-template-columns: repeat(5, minmax(0, 1fr));
+gap: 16px;
+}
+
+.stat-card {
+position: relative;
+overflow: hidden;
+background: var(--bg-elevated);
+border: 1px solid var(--border);
+border-radius: var(--radius-lg);
+padding: 18px 18px 16px;
+box-shadow: var(--shadow-soft);
+backdrop-filter: blur(12px);
+transition: 0.2s ease;
+min-height: 132px;
+}
+
+.stat-card:hover {
+transform: translateY(-2px);
+box-shadow: var(--shadow);
+border-color: var(--border-strong);
+}
+
+.stat-card::after {
+content: "";
+position: absolute;
+inset-inline-end: -24px;
+top: -24px;
+width: 94px;
+height: 94px;
+border-radius: 50%;
+background: var(--card-glow, var(--neutral-soft));
+filter: blur(8px);
+opacity: 0.7;
+pointer-events: none;
+}
+
+.stat-card__head {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 12px;
+margin-bottom: 18px;
+}
+
+.stat-card__label {
+color: var(--text-muted);
+font-size: 0.92rem;
+font-weight: 600;
+}
+
+.stat-card__icon {
+width: 42px;
+height: 42px;
+border-radius: 14px;
+display: grid;
+place-items: center;
+background: var(--icon-bg, var(--neutral-soft));
+color: var(--icon-color, var(--neutral));
+border: 1px solid var(--border);
+flex-shrink: 0;
+}
+
+.stat-card__icon svg {
+width: 20px;
+height: 20px;
+}
+
+.stat-card__value {
+font-size: clamp(1.65rem, 1.4rem + 0.5vw, 2rem);
+font-weight: 800;
+line-height: 1;
+margin: 0 0 10px;
+letter-spacing: -0.03em;
+}
+
+.stat-card__sub {
+color: var(--text-muted);
+font-size: 0.88rem;
+}
+
+.card {
+background: var(--bg-elevated);
+border: 1px solid var(--border);
+border-radius: var(--radius-xl);
+box-shadow: var(--shadow-soft);
+backdrop-filter: blur(12px);
+}
+
+.toolbar {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 16px;
+padding: 18px;
+flex-wrap: wrap;
+}
+
+.toolbar__group {
+display: flex;
+align-items: center;
+gap: 12px;
+flex-wrap: wrap;
+}
+
+.field {
+position: relative;
+min-width: 240px;
+flex: 1 1 280px;
+}
+
+.field svg {
+position: absolute;
+top: 50%;
+inset-inline-start: 14px;
+transform: translateY(-50%);
+width: 18px;
+height: 18px;
+color: var(--text-soft);
+pointer-events: none;
+}
+
+.input,
+.select {
+width: 100%;
+height: 46px;
+border-radius: 14px;
+border: 1px solid var(--border);
+background: var(--bg-solid);
+color: var(--text);
+padding: 0 14px;
+outline: none;
+transition: 0.2s ease;
+}
+
+.input {
+padding-inline-start: 42px;
+}
+
+.input:focus,
+.select:focus {
+border-color: var(--primary);
+box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.table-card {
+overflow: hidden;
+}
+
+.table-wrap {
+overflow: auto;
+max-height: 70vh;
+border-top: 1px solid var(--border);
+}
+
+table {
+width: 100%;
+border-collapse: separate;
+border-spacing: 0;
+min-width: 980px;
+}
+
+thead th {
+position: sticky;
+top: 0;
+z-index: 5;
+background: color-mix(in srgb, var(--bg-solid) 88%, transparent);
+backdrop-filter: blur(12px);
+color: var(--text-muted);
+font-size: 0.84rem;
+font-weight: 800;
+text-align: right;
+padding: 16px 18px;
+border-bottom: 1px solid var(--border);
+white-space: nowrap;
+}
+
+tbody td {
+padding: 16px 18px;
+border-bottom: 1px solid var(--border);
+vertical-align: middle;
+}
+
+tbody tr {
+transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+background: var(--surface-2);
+}
+
+.device-cell {
+display: flex;
+flex-direction: column;
+gap: 6px;
+}
+
+.device-id {
+font-weight: 800;
+font-size: 0.98rem;
+letter-spacing: 0.02em;
+}
+
+.device-meta {
+font-size: 0.82rem;
+color: var(--text-muted);
+}
+
+.badge {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+white-space: nowrap;
+padding: 8px 12px;
+border-radius: 999px;
+font-size: 0.82rem;
+font-weight: 800;
+line-height: 1;
+border: 1px solid transparent;
+}
+
+.badge::before {
+content: "";
+width: 8px;
+height: 8px;
+border-radius: 50%;
+background: currentColor;
+flex-shrink: 0;
+}
+
+.badge--success {
+background: var(--success-soft);
+color: var(--success);
+border-color: color-mix(in srgb, var(--success) 18%, transparent);
+}
+
+.badge--danger {
+background: var(--danger-soft);
+color: var(--danger);
+border-color: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.badge--warning {
+background: var(--warning-soft);
+color: var(--warning);
+border-color: color-mix(in srgb, var(--warning) 18%, transparent);
+}
+
+.badge--neutral {
+background: var(--neutral-soft);
+color: var(--neutral);
+border-color: color-mix(in srgb, var(--neutral) 18%, transparent);
+}
+
+.log-preview {
+max-width: 380px;
+margin: 0;
+padding: 12px 14px;
+border-radius: 14px;
+background: var(--bg-soft);
+border: 1px solid var(--border);
+direction: ltr;
+text-align: left;
+color: var(--text);
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+font-size: 0.8rem;
+line-height: 1.7;
+white-space: pre-wrap;
+word-break: break-word;
+overflow-wrap: anywhere;
+}
+
+.json-key { color: var(--primary); }
+.json-string { color: var(--success); }
+.json-number { color: var(--warning); }
+.json-boolean { color: #a855f7; }
+.json-null { color: var(--danger); }
+
+.action-cell {
+text-align: left;
+}
+
+.ghost-btn {
+height: 38px;
+border-radius: 12px;
+padding: 0 12px;
+background: transparent;
+border: 1px solid var(--border);
+color: var(--text);
+display: inline-flex;
+align-items: center;
+gap: 8px;
+cursor: pointer;
+transition: 0.2s ease;
+}
+
+.ghost-btn:hover {
+background: var(--bg-soft);
+border-color: var(--border-strong);
+}
+
+.ghost-btn svg {
+width: 16px;
+height: 16px;
+}
+
+.empty-state {
+display: none;
+padding: 40px 20px 48px;
+text-align: center;
+}
+
+.empty-state.active {
+display: block;
+}
+
+.empty-state__icon {
+width: 64px;
+height: 64px;
+margin: 0 auto 16px;
+display: grid;
+place-items: center;
+border-radius: 18px;
+background: var(--bg-soft);
+border: 1px solid var(--border);
+color: var(--text-soft);
+}
+
+.empty-state h3 {
+margin: 0 0 8px;
+font-size: 1.05rem;
+}
+
+.empty-state p {
+margin: 0;
+color: var(--text-muted);
+font-size: 0.94rem;
+}
+
+.modal {
+position: fixed;
+inset: 0;
+z-index: 60;
+display: none;
+}
+
+.modal.active {
+display: block;
+}
+
+.modal__backdrop {
+position: absolute;
+inset: 0;
+background: rgba(2, 8, 23, 0.55);
+backdrop-filter: blur(4px);
+}
+
+.modal__panel {
+position: absolute;
+top: 0;
+inset-inline-end: 0;
+width: min(100%, 480px);
+height: 100%;
+background: var(--bg-solid);
+border-inline-start: 1px solid var(--border);
+box-shadow: var(--shadow);
+display: flex;
+flex-direction: column;
+transform: translateX(100%);
+transition: transform 0.28s ease;
+}
+
+.modal.active .modal__panel {
+transform: translateX(0);
+}
+
+[dir="rtl"] .modal__panel {
+transform: translateX(-100%);
+}
+
+[dir="rtl"] .modal.active .modal__panel {
+transform: translateX(0);
+}
+
+.modal__header {
+padding: 20px 20px 16px;
+border-bottom: 1px solid var(--border);
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 14px;
+}
+
+.modal__title h3 {
+margin: 0;
+font-size: 1.15rem;
+font-weight: 800;
+}
+
+.modal__title p {
+margin: 8px 0 0;
+color: var(--text-muted);
+font-size: 0.9rem;
+}
+
+.icon-btn {
+width: 40px;
+height: 40px;
+border-radius: 12px;
+border: 1px solid var(--border);
+background: var(--bg-soft);
+color: var(--text);
+display: grid;
+place-items: center;
+cursor: pointer;
+transition: 0.2s ease;
+flex-shrink: 0;
+}
+
+.icon-btn:hover {
+background: var(--surface-2);
+}
+
+.icon-btn svg {
+width: 18px;
+height: 18px;
+}
+
+.modal__body {
+padding: 20px;
+overflow: auto;
+display: flex;
+flex-direction: column;
+gap: 18px;
+}
+
+.detail-grid {
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 12px;
+}
+
+.detail-item {
+background: var(--bg-soft);
+border: 1px solid var(--border);
+border-radius: 16px;
+padding: 14px;
+}
+
+.detail-item__label {
+display: block;
+color: var(--text-muted);
+font-size: 0.82rem;
+margin-bottom: 8px;
+}
+
+.detail-item__value {
+font-size: 0.98rem;
+font-weight: 700;
+word-break: break-word;
+}
+
+.detail-log {
+padding: 16px;
+border-radius: 18px;
+background: var(--bg-soft);
+border: 1px solid var(--border);
+}
+
+.detail-log__title {
+margin: 0 0 12px;
+font-size: 0.96rem;
+font-weight: 800;
+}
+
+.detail-log pre {
+margin: 0;
+direction: ltr;
+text-align: left;
+white-space: pre-wrap;
+word-break: break-word;
+overflow-wrap: anywhere;
+color: var(--text);
+font-size: 0.84rem;
+line-height: 1.8;
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+.footer-note {
+padding: 0 4px 8px;
+color: var(--text-soft);
+font-size: 0.82rem;
+text-align: center;
+}
+
+.spin {
+animation: spin 0.8s linear;
+}
+
+@keyframes spin {
+to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1180px) {
+.summary-grid {
+grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+}
+
+@media (max-width: 900px) {
+.app-shell {
+padding: 16px;
+}
+
+.topbar {
+position: static;
+flex-direction: column;
+align-items: stretch;
+}
+
+.topbar__actions {
+justify-content: flex-start;
+}
+
+.summary-grid {
+grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-grid {
+grid-template-columns: 1fr;
+}
+}
+
+@media (max-width: 560px) {
+.summary-grid {
+grid-template-columns: 1fr;
+}
+
+.toolbar {
+padding: 14px;
+}
+
+.field,
+.toolbar__group {
+width: 100%;
+}
+
+.toolbar__group {
+flex-direction: column;
+align-items: stretch;
+}
+
+.btn,
+.select,
+.input {
+width: 100%;
+}
+
+.topbar__main {
+align-items: flex-start;
+}
+
+.status-pill {
+width: 100%;
+justify-content: center;
+}
+
+.modal__panel {
+width: 100%;
+}
+}
+  </style>
+</head>
+<body class="dark">
+  <div class="app-shell">
+<header class="topbar" aria-label="هدر داشبورد">
+<div class="topbar__main">
+<div class="brand-badge" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M4 7.5C4 6.67 4.67 6 5.5 6h13c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5h-13C4.67 18 4 17.33 4 16.5v-9Z" stroke="currentColor" stroke-width="1.8"/>
+<path d="M8 10h4M8 14h3M15.5 9.5l1 1 2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</div>
+<div class="topbar__title">
+<h1>داشبورد مانیتورینگ زنده دستگاه‌های CNC</h1>
+<p>نمایش لحظه‌ای وضعیت ارتباط، عملکرد ماشین و آخرین لاگ‌های دریافتی</p>
+</div>
+</div>
+
+<div class="topbar__actions">
+<div class="status-pill" aria-label="وضعیت کلی سرور">
+<span class="status-pill__dot"></span>
+<span class="status-pill__label">وضعیت سرور:</span>
+<span class="status-pill__value" id="serverStatusText">آنلاین</span>
+</div>
+
+<div class="status-pill" aria-label="آخرین بروزرسانی">
+<span class="status-pill__label">آخرین بروزرسانی:</span>
+<span class="status-pill__value" id="lastUpdated">1405/02/26 10:15:30</span>
+</div>
+
+<button class="btn" id="themeToggle" type="button" aria-label="تغییر تم">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18.36 5.64l-1.56 1.56M7.2 16.8l-1.56 1.56M18.36 18.36 16.8 16.8M7.2 7.2 5.64 5.64" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+<circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"/>
+</svg>
+<span id="themeToggleText">تم روشن</span>
+</button>
+
+<button class="btn btn--primary" id="refreshBtn" type="button" aria-label="بروزرسانی">
+<svg id="refreshIcon" viewBox="0 0 24 24" fill="none">
+<path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<span>رفرش</span>
+</button>
+</div>
+</header>
+
+<section class="section" aria-labelledby="summary-title">
+<div class="section-header">
+<div class="section-title">
+<h2 id="summary-title">خلاصه وضعیت ناوگان</h2>
+<p>نمای کلی از وضعیت اتصال، کارکرد و هشدارهای سیستم</p>
+</div>
+</div>
+
+<div class="summary-grid">
+<article class="stat-card" style="--icon-bg: var(--primary-soft); --icon-color: var(--primary); --card-glow: var(--primary-soft);">
+<div class="stat-card__head">
+<span class="stat-card__label">کل دستگاه‌ها</span>
+<div class="stat-card__icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none">
+<rect x="3.5" y="5" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+<path d="M8 19.5h8M8 8.5h8M8 12h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
+</div>
+</div>
+<p class="stat-card__value" id="statTotal">0</p>
+<div class="stat-card__sub">تعداد کل بوردها و کنترلرهای مانیتورشده</div>
+</article>
+
+<article class="stat-card" style="--icon-bg: var(--success-soft); --icon-color: var(--success); --card-glow: var(--success-soft);">
+<div class="stat-card__head">
+<span class="stat-card__label">دستگاه‌های آنلاین</span>
+<div class="stat-card__icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M5 12.5 9.2 16.5 19 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</div>
+</div>
+<p class="stat-card__value" id="statOnline">0</p>
+<div class="stat-card__sub">دستگاه‌های متصل و در دسترس</div>
+</article>
+
+<article class="stat-card" style="--icon-bg: var(--danger-soft); --icon-color: var(--danger); --card-glow: var(--danger-soft);">
+<div class="stat-card__head">
+<span class="stat-card__label">دستگاه‌های آفلاین</span>
+<div class="stat-card__icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>
+</div>
+</div>
+<p class="stat-card__value" id="statOffline">0</p>
+<div class="stat-card__sub">دستگاه‌های دارای قطع ارتباط</div>
+</article>
+
+<article class="stat-card" style="--icon-bg: var(--warning-soft); --icon-color: var(--warning); --card-glow: var(--warning-soft);">
+<div class="stat-card__head">
+<span class="stat-card__label">در حال کار</span>
+<div class="stat-card__icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M12 3v4M12 17v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M3 12h4M17 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+<circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"/>
+</svg>
+</div>
+</div>
+<p class="stat-card__value" id="statRunning">0</p>
+<div class="stat-card__sub">ماشین‌هایی که در وضعیت تولید هستند</div>
+</article>
+
+<article class="stat-card" style="--icon-bg: var(--neutral-soft); --icon-color: var(--neutral); --card-glow: var(--neutral-soft);">
+<div class="stat-card__head">
+<span class="stat-card__label">هشدارها / خطاها</span>
+<div class="stat-card__icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M12 8v5M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</div>
+</div>
+<p class="stat-card__value" id="statAlerts">0</p>
+<div class="stat-card__sub">خطاهای فعال یا دستگاه‌های نیازمند بررسی</div>
+</article>
+</div>
+</section>
+
+<section class="section card table-card" aria-labelledby="devices-title">
+<div class="toolbar">
+<div class="section-title">
+<h2 id="devices-title">فهرست دستگاه‌ها</h2>
+<p>جستجو، فیلتر و بررسی جزئیات هر دستگاه</p>
+</div>
+
+<div class="toolbar__group">
+<label class="field" aria-label="جستجو بر اساس شناسه دستگاه">
+<svg viewBox="0 0 24 24" fill="none">
+<circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/>
+<path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
+<input id="searchInput" class="input" type="search" placeholder="جستجو بر اساس Device ID..." />
+</label>
+
+<select id="statusFilter" class="select" aria-label="فیلتر وضعیت اتصال">
+<option value="all">همه وضعیت‌ها</option>
+<option value="online">متصل</option>
+<option value="offline">قطع ارتباط</option>
+</select>
+</div>
+</div>
+
+<div class="table-wrap">
+<table aria-describedby="devices-title">
+<thead>
+<tr>
+<th>شناسه دستگاه</th>
+<th>وضعیت اتصال</th>
+<th>آخرین بروزرسانی</th>
+<th>وضعیت ماشین</th>
+<th>RPM</th>
+<th>Part Count</th>
+<th>شیفت</th>
+<th>آخرین لاگ</th>
+<th>جزئیات</th>
+</tr>
+</thead>
+<tbody id="deviceTableBody"></tbody>
+</table>
+
+<div class="empty-state" id="emptyState">
+<div class="empty-state__icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+<circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/>
+<path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
+</div>
+<h3>نتیجه‌ای پیدا نشد</h3>
+<p>عبارت جستجو یا فیلتر انتخابی را تغییر دهید.</p>
+</div>
+</div>
+</section>
+
+<p class="footer-note">بروزرسانی خودکار هر ۳ ثانیه در نسخه واقعی قابل فعال‌سازی است. این نسخه به‌صورت نمایشی طراحی شده است.</p>
+  </div>
+
+  <div class="modal" id="detailModal" aria-hidden="true">
+<div class="modal__backdrop" data-close-modal="true"></div>
+<aside class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div class="modal__header">
+<div class="modal__title">
+<h3 id="modalTitle">جزئیات دستگاه</h3>
+<p id="modalSubtitle">اطلاعات کامل وضعیت و آخرین لاگ دریافتی</p>
+</div>
+<button class="icon-btn" type="button" id="closeModalBtn" aria-label="بستن">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>
+</button>
+</div>
+
+<div class="modal__body">
+<div class="detail-grid" id="detailGrid"></div>
+
+<div class="detail-log">
+<h4 class="detail-log__title">آخرین لاگ دیکد شده</h4>
+<pre id="modalLog"></pre>
+</div>
+</div>
+</aside>
+  </div>
+
+  <script>
+const devices = [
+{
+id: "NC87",
+connectionStatus: "online",
+lastUpdate: "1405/02/26 10:15:30",
+machineStatus: "running",
+rpm: 1500,
+partCount: 120,
+shift: 2,
+errorState: "none",
+lastLog: {
+status: "running",
+part_count: 120,
+rpm: 1500
+}
+},
+{
+id: "NC22",
+connectionStatus: "offline",
+lastUpdate: "1405/02/26 09:45:12",
+machineStatus: "idle",
+rpm: 0,
+partCount: 0,
+shift: 1,
+errorState: "connection_timeout",
+lastLog: {
+error: "connection_timeout",
+last_state: "idle"
+}
+},
+{
+id: "NC45",
+connectionStatus: "online",
+lastUpdate: "1405/02/26 10:15:28",
+machineStatus: "stopped",
+rpm: 0,
+partCount: 55,
+shift: 1,
+errorState: "downtime_warning",
+lastLog: {
+status: "stopped",
+downtime_factor: "$55/60$",
+shift: 1
+}
+}
+];
+
+const body = document.body;
+const tableBody = document.getElementById("deviceTableBody");
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+const emptyState = document.getElementById("emptyState");
+const detailModal = document.getElementById("detailModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const detailGrid = document.getElementById("detailGrid");
+const modalTitle = document.getElementById("modalTitle");
+const modalSubtitle = document.getElementById("modalSubtitle");
+const modalLog = document.getElementById("modalLog");
+const themeToggle = document.getElementById("themeToggle");
+const themeToggleText = document.getElementById("themeToggleText");
+const refreshBtn = document.getElementById("refreshBtn");
+const refreshIcon = document.getElementById("refreshIcon");
+const lastUpdated = document.getElementById("lastUpdated");
+
+const statTotal = document.getElementById("statTotal");
+const statOnline = document.getElementById("statOnline");
+const statOffline = document.getElementById("statOffline");
+const statRunning = document.getElementById("statRunning");
+const statAlerts = document.getElementById("statAlerts");
+
+function escapeHtml(value) {
+return String(value)
+.replace(/&/g, "&amp;")
+.replace(/</g, "&lt;")
+.replace(/>/g, "&gt;")
+.replace(/"/g, "&quot;")
+.replace(/'/g, "&#039;");
+}
+
+function formatJsonHighlight(obj) {
+const json = JSON.stringify(obj, null, 2);
+return escapeHtml(json).replace(
+/("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\btrue\b|\bfalse\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?)/g,
+function (match) {
+let cls = "json-number";
+if (/^"/.test(match)) {
+cls = /:$/.test(match) ? "json-key" : "json-string";
+} else if (/true|false/.test(match)) {
+cls = "json-boolean";
+} else if (/null/.test(match)) {
+cls = "json-null";
+}
+return '<span class="' + cls + '">' + match + '</span>';
+}
+);
+}
+
+function getConnectionBadge(status) {
+if (status === "online") {
+return '<span class="badge badge--success">متصل</span>';
+}
+return '<span class="badge badge--danger">قطع ارتباط</span>';
+}
+
+function getMachineBadge(status) {
+if (status === "running") {
+return '<span class="badge badge--warning">در حال کار</span>';
+}
+if (status === "stopped") {
+return '<span class="badge badge--neutral">متوقف</span>';
+}
+return '<span class="badge badge--neutral">بیکار</span>';
+}
+
+function getPersianMachineStatus(status) {
+const map = {
+running: "در حال کار",
+stopped: "متوقف",
+idle: "بیکار"
+};
+return map[status] || status;
+}
+
+function getPersianConnection(status) {
+return status === "online" ? "متصل" : "قطع ارتباط";
+}
+
+function getErrorStateLabel(errorState) {
+const map = {
+none: "بدون خطا",
+connection_timeout: "قطع ارتباط / Timeout",
+downtime_warning: "هشدار توقف",
+};
+return map[errorState] || errorState;
+}
+
+function getFilteredDevices() {
+const q = searchInput.value.trim().toLowerCase();
+const filter = statusFilter.value;
+
+return devices.filter(device => {
+const matchesSearch = device.id.toLowerCase().includes(q);
+const matchesStatus =
+filter === "all" ? true :
+filter === "online" ? device.connectionStatus === "online" :
+device.connectionStatus === "offline";
+
+return matchesSearch && matchesStatus;
+});
+}
+
+function renderTable() {
+const filtered = getFilteredDevices();
+
+if (!filtered.length) {
+tableBody.innerHTML = "";
+emptyState.classList.add("active");
+return;
+}
+
+emptyState.classList.remove("active");
+
+tableBody.innerHTML = filtered.map(device => `
+<tr>
+<td>
+<div class="device-cell">
+<span class="device-id">${escapeHtml(device.id)}</span>
+<span class="device-meta">Industrial CNC Node</span>
+</div>
+</td>
+<td>${getConnectionBadge(device.connectionStatus)}</td>
+<td>${escapeHtml(device.lastUpdate)}</td>
+<td>${getMachineBadge(device.machineStatus)}</td>
+<td>${escapeHtml(device.rpm)}</td>
+<td>${escapeHtml(device.partCount)}</td>
+<td>${escapeHtml(device.shift)}</td>
+<td>
+<pre class="log-preview">${formatJsonHighlight(device.lastLog)}</pre>
+</td>
+<td class="action-cell">
+<button class="ghost-btn" type="button" data-device-id="${escapeHtml(device.id)}">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.8"/>
+<circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.8"/>
+</svg>
+مشاهده
+</button>
+</td>
+</tr>
+`).join("");
+}
+
+function renderStats() {
+const total = devices.length;
+const online = devices.filter(d => d.connectionStatus === "online").length;
+const offline = devices.filter(d => d.connectionStatus === "offline").length;
+const running = devices.filter(d => d.machineStatus === "running").length;
+const alerts = devices.filter(d => d.errorState && d.errorState !== "none").length;
+
+statTotal.textContent = total;
+statOnline.textContent = online;
+statOffline.textContent = offline;
+statRunning.textContent = running;
+statAlerts.textContent = alerts;
+
+const latestUpdate = devices
+.map(d => d.lastUpdate)
+.sort()
+.slice(-1)[0];
+
+lastUpdated.textContent = latestUpdate || "-";
+}
+
+function openModal(deviceId) {
+const device = devices.find(d => d.id === deviceId);
+if (!device) return;
+
+modalTitle.textContent = `جزئیات دستگاه ${device.id}`;
+modalSubtitle.textContent = `آخرین بروزرسانی: ${device.lastUpdate}`;
+
+detailGrid.innerHTML = `
+<div class="detail-item">
+<span class="detail-item__label">Device ID</span>
+<div class="detail-item__value">${escapeHtml(device.id)}</div>
+</div>
+<div class="detail-item">
+<span class="detail-item__label">Connection Status</span>
+<div class="detail-item__value">${getPersianConnection(device.connectionStatus)}</div>
+</div>
+<div class="detail-item">
+<span class="detail-item__label">Last Update</span>
+<div class="detail-item__value">${escapeHtml(device.lastUpdate)}</div>
+</div>
+<div class="detail-item">
+<span class="detail-item__label">Machine Status</span>
+<div class="detail-item__value">${getPersianMachineStatus(device.machineStatus)}</div>
+</div>
+<div class="detail-item">
+<span class="detail-item__label">RPM</span>
+<div class="detail-item__value">${escapeHtml(device.rpm)}</div>
+</div>
+<div class="detail-item">
+<span class="detail-item__label">Part Count</span>
+<div class="detail-item__value">${escapeHtml(device.partCount)}</div>
+</div>
+<div class="detail-item">
+<span class="detail-item__label">Shift</span>
+<div class="detail-item__value">${escapeHtml(device.shift)}</div>
+</div>
+<div class="detail-item">
+<span class="detail-item__label">Error State</span>
+<div class="detail-item__value">${escapeHtml(getErrorStateLabel(device.errorState))}</div>
+</div>
+`;
+
+modalLog.innerHTML = formatJsonHighlight(device.lastLog);
+detailModal.classList.add("active");
+detailModal.setAttribute("aria-hidden", "false");
+body.style.overflow = "hidden";
+}
+
+function closeModal() {
+detailModal.classList.remove("active");
+detailModal.setAttribute("aria-hidden", "true");
+body.style.overflow = "";
+}
+
+function applyTheme(theme) {
+const isDark = theme === "dark";
+body.classList.toggle("dark", isDark);
+localStorage.setItem("cnc-dashboard-theme", theme);
+themeToggleText.textContent = isDark ? "تم روشن" : "تم تیره";
+}
+
+function initTheme() {
+const savedTheme = localStorage.getItem("cnc-dashboard-theme");
+if (savedTheme === "light" || savedTheme === "dark") {
+applyTheme(savedTheme);
+} else {
+applyTheme("dark");
+}
+}
+
+function handleRefresh() {
+refreshIcon.classList.remove("spin");
+void refreshIcon.offsetWidth;
+refreshIcon.classList.add("spin");
+renderStats();
+renderTable();
+}
+
+searchInput.addEventListener("input", renderTable);
+statusFilter.addEventListener("change", renderTable);
+
+tableBody.addEventListener("click", (event) => {
+const button = event.target.closest("[data-device-id]");
+if (!button) return;
+openModal(button.getAttribute("data-device-id"));
+});
+
+detailModal.addEventListener("click", (event) => {
+if (event.target.matches("[data-close-modal='true']")) {
+closeModal();
+}
+});
+
+closeModalBtn.addEventListener("click", closeModal);
+
+document.addEventListener("keydown", (event) => {
+if (event.key === "Escape" && detailModal.classList.contains("active")) {
+closeModal();
+}
+});
+
+themeToggle.addEventListener("click", () => {
+const nextTheme = body.classList.contains("dark") ? "light" : "dark";
+applyTheme(nextTheme);
+});
+
+refreshBtn.addEventListener("click", handleRefresh);
+
+initTheme();
+renderStats();
+renderTable();
+  </script>
+</body>
+</html>

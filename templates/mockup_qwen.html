@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>داشبورد مانیتورینگ CNC</title>
+
+<style>
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-Medium.woff2") format("woff2");
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-SemiBold.woff2") format("woff2");
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+:root {
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-muted: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --success: #10b981;
+    --success-bg: #d1fae5;
+    --success-light: #ecfdf5;
+    --danger: #ef4444;
+    --danger-bg: #fee2e2;
+    --danger-light: #fef2f2;
+    --warning: #f59e0b;
+    --warning-bg: #fef3c7;
+    --warning-light: #fffbeb;
+    --info: #3b82f6;
+    --info-bg: #dbeafe;
+    --info-light: #eff6ff;
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --header-height: 70px;
+    --radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+    --success: #34d399;
+    --success-bg: #064e3b;
+    --success-light: #022c22;
+    --danger: #f87171;
+    --danger-bg: #7f1d1d;
+    --danger-light: #450a0a;
+    --warning: #fbbf24;
+    --warning-bg: #78350f;
+    --warning-light: #451a03;
+    --info: #60a5fa;
+    --info-bg: #1e3a8a;
+    --info-light: #172554;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    transition: var(--transition);
+    padding: 0;
+    margin: 0;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* Header */
+.header {
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: var(--transition);
+}
+
+.header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.server-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--success-light);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge.green { background: var(--success-bg); color: var(--success); }
+.badge.red { background: var(--danger-bg); color: var(--danger); }
+.badge.yellow { background: var(--warning-bg); color: var(--warning); }
+.badge.blue { background: var(--info-bg); color: var(--info); }
+
+.controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+button {
+    border: none;
+    background: var(--primary);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+button:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+button.secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+button.secondary:hover {
+    background: var(--bg-secondary);
+}
+
+/* Cards */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 18px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-title {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.card-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+input, select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-family: inherit;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Table */
+.table-wrapper {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: auto;
+    border: 1px solid var(--border-color);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+thead {
+    background: var(--bg-secondary);
+}
+
+th, td {
+    padding: 14px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+
+th {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+tbody tr:hover {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.device-id {
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-family: monospace;
+}
+
+.log {
+    max-width: 340px;
+    font-family: monospace;
+    font-size: 12px;
+    text-align: left;
+    direction: ltr;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--bg-secondary);
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .log {
+    background: var(--bg-primary);
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-box {
+    background: var(--bg-card);
+    padding: 24px;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    align-items: center;
+}
+
+.modal-header button {
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.detail {
+    background: var(--bg-secondary);
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.detail strong {
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.empty {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 16px;
+    }
+    
+    .header-container {
+        padding: 0 16px;
+        height: auto;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+    
+    .header-right {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .cards {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+    
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    input, select {
+        width: 100%;
+    }
+    
+    th, td {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+    
+    .log {
+        max-width: 200px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .server-status {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="header-container">
+        <div class="header-right">
+            <div class="header-title">
+                <h1>داشبورد مانیتورینگ دستگاه‌های CNC</h1>
+            </div>
+            <div class="server-status">
+                وضعیت سرور
+                <span class="badge green">آنلاین</span>
+            </div>
+        </div>
+        <div class="header-left">
+            <div class="controls">
+                <span id="updateTime" style="font-size:13px;color:var(--text-muted)"></span>
+                <button onclick="refreshData()">رفرش</button>
+                <button class="secondary" onclick="toggleTheme()">تغییر تم</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+<div class="cards">
+    <div class="card">
+        <div class="card-title">کل دستگاه‌ها</div>
+        <div class="card-value" id="totalDevices">0</div>
+    </div>
+    
+    <div class="card">
+        <div class="card-title">آنلاین</div>
+        <div class="card-value" id="onlineDevices">0</div>
+    </div>
+    
+    <div class="card">
+        <div class="card-title">آفلاین</div>
+        <div class="card-value" id="offlineDevices">0</div>
+    </div>
+    
+    <div class="card">
+        <div class="card-title">در حال کار</div>
+        <div class="card-value" id="runningDevices">0</div>
+    </div>
+    
+    <div class="card">
+        <div class="card-title">خطاها</div>
+        <div class="card-value" id="errorDevices">0</div>
+    </div>
+</div>
+
+<div class="toolbar">
+    <input id="search" placeholder="جستجو شناسه دستگاه">
+    <select id="filter">
+        <option value="all">همه</option>
+        <option value="online">متصل</option>
+        <option value="offline">قطع ارتباط</option>
+    </select>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>شناسه دستگاه (ID)</th>
+                <th>وضعیت اتصال</th>
+                <th>آخرین بروزرسانی</th>
+                <th>آخرین لاگ</th>
+                <th>جزئیات</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+    <div id="emptyState" class="empty" style="display:none">
+        موردی یافت نشد
+    </div>
+</div>
+
+</div>
+
+<div class="modal" id="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <strong id="modalTitle"></strong>
+            <button onclick="closeModal()">بستن</button>
+        </div>
+        <div class="detail-grid" id="detailGrid"></div>
+        <div style="margin-top:14px">
+            <div style="font-size:13px;margin-bottom:6px;color:var(--text-muted)">آخرین لاگ</div>
+            <div id="modalLog" class="log"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const devices = [
+    {
+        id: "NC87",
+        connection: "online",
+        last: "1405/02/26 10:15:30",
+        log: { status: "running", part_count: 120, rpm: 1500, shift: 1 }
+    },
+    {
+        id: "NC22",
+        connection: "offline",
+        last: "1405/02/26 09:45:12",
+        log: { error: "connection_timeout", last_state: "idle" }
+    },
+    {
+        id: "NC45",
+        connection: "online",
+        last: "1405/02/26 10:15:28",
+        log: { status: "stopped", downtime_factor: "55/60", shift: 1 }
+    }
+];
+
+function render() {
+    const body = document.getElementById("tableBody");
+    body.innerHTML = "";
+    
+    const search = document.getElementById("search").value.toLowerCase();
+    const filter = document.getElementById("filter").value;
+    
+    let filtered = devices.filter(d => d.id.toLowerCase().includes(search));
+    
+    if (filter === "online") filtered = filtered.filter(d => d.connection === "online");
+    if (filter === "offline") filtered = filtered.filter(d => d.connection === "offline");
+    
+    document.getElementById("emptyState").style.display = filtered.length ? "none" : "block";
+    
+    filtered.forEach(d => {
+        const tr = document.createElement("tr");
+        
+        const statusBadge = d.connection === "online"
+            ? '<span class="badge green">متصل</span>'
+            : '<span class="badge red">قطع ارتباط</span>';
+            
+        tr.innerHTML = `
+            <td class="device-id">${d.id}</td>
+            <td>${statusBadge}</td>
+            <td>${d.last}</td>
+            <td><div class="log">${JSON.stringify(d.log, null, 2)}</div></td>
+            <td><button onclick="showDetails('${d.id}')">مشاهده</button></td>
+        `;
+        
+        body.appendChild(tr);
+    });
+    
+    updateCards();
+}
+
+function updateCards() {
+    const total = devices.length;
+    const online = devices.filter(d => d.connection === "online").length;
+    const offline = devices.filter(d => d.connection === "offline").length;
+    const running = devices.filter(d => d.log.status === "running").length;
+    const errors = devices.filter(d => d.log.error).length;
+    
+    document.getElementById("totalDevices").textContent = total;
+    document.getElementById("onlineDevices").textContent = online;
+    document.getElementById("offlineDevices").textContent = offline;
+    document.getElementById("runningDevices").textContent = running;
+    document.getElementById("errorDevices").textContent = errors;
+}
+
+function showDetails(id) {
+    const d = devices.find(x => x.id === id);
+    
+    document.getElementById("modalTitle").textContent = "دستگاه " + d.id;
+    
+    const grid = document.getElementById("detailGrid");
+    grid.innerHTML = "";
+    
+    const details = {
+        "شناسه دستگاه": d.id,
+        "وضعیت اتصال": d.connection === "online" ? "متصل" : "قطع ارتباط",
+        "آخرین بروزرسانی": d.last,
+        "وضعیت ماشین": d.log.status || "-",
+        "RPM": d.log.rpm || "-",
+        "تعداد قطعه": d.log.part_count || "-",
+        "شیفت": d.log.shift || "-",
+        "وضعیت خطا": d.log.error || "بدون خطا"
+    };
+    
+    Object.entries(details).forEach(([key, value]) => {
+        const div = document.createElement("div");
+        div.className = "detail";
+        div.innerHTML = `<strong>${key}</strong>${value}`;
+        grid.appendChild(div);
+    });
+    
+    document.getElementById("modalLog").textContent = JSON.stringify(d.log, null, 2);
+    document.getElementById("modal").classList.add("active");
+    document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+    document.getElementById("modal").classList.remove("active");
+    document.body.style.overflow = "";
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    if (currentTheme === "dark") {
+        document.documentElement.removeAttribute("data-theme");
+        localStorage.setItem("theme", "light");
+    } else {
+        document.documentElement.setAttribute("data-theme", "dark");
+        localStorage.setItem("theme", "dark");
+    }
+}
+
+function refreshData() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString("fa-IR", {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    const dateString = now.toLocaleDateString("fa-IR");
+    document.getElementById("updateTime").textContent = `آخرین بروزرسانی: ${dateString} ${timeString}`;
+}
+
+// Initialize
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("filter").addEventListener("change", render);
+
+// Load saved theme
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+}
+
+refreshData();
+render();
+</script>
+
+</body>
+</html>

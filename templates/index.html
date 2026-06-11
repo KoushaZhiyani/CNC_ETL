@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>داشبورد مانیتورینگ بوردهای CNC</title>
+  <style>
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-Medium.woff2") format("woff2");
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-SemiBold.woff2") format("woff2");
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --bg: #f5f7fb;
+      --bg-elevated: #ffffff;
+      --bg-soft: #f0f3f8;
+      --text: #111827;
+      --text-soft: #6b7280;
+      --border: #e5e7eb;
+      --border-strong: #d6dbe4;
+      --primary: #2563eb;
+      --primary-soft: rgba(37, 99, 235, 0.10);
+      --success: #16a34a;
+      --success-soft: rgba(22, 163, 74, 0.12);
+      --danger: #dc2626;
+      --danger-soft: rgba(220, 38, 38, 0.12);
+      --warning: #d97706;
+      --warning-soft: rgba(217, 119, 6, 0.12);
+      --info: #64748b;
+      --info-soft: rgba(100, 116, 139, 0.12);
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --radius-xs: 10px;
+    }
+
+    html.dark {
+      --bg: #0b1220;
+      --bg-elevated: #121a2b;
+      --bg-soft: #0f1727;
+      --text: #e5e7eb;
+      --text-soft: #94a3b8;
+      --border: #1f2937;
+      --border-strong: #334155;
+      --primary: #60a5fa;
+      --primary-soft: rgba(96, 165, 250, 0.14);
+      --success: #22c55e;
+      --success-soft: rgba(34, 197, 94, 0.14);
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.14);
+      --warning: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.14);
+      --info: #94a3b8;
+      --info-soft: rgba(148, 163, 184, 0.14);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Vazirmatn", Tahoma, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1400px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 22px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 260px;
+    }
+
+    .brand-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary-soft), transparent);
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      color: var(--primary);
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--text-soft);
+      font-size: 0.92rem;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .server-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--success-soft);
+      color: var(--success);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 16%, transparent);
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--border-strong);
+      background: var(--bg-soft);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border-color: transparent;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.03);
+      background: var(--primary);
+    }
+
+    .meta {
+      color: var(--text-soft);
+      font-size: 0.88rem;
+      padding: 0 4px;
+    }
+
+    /* ----------------- STAT CARDS (از موکاپ) ----------------- */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      min-height: 132px;
+    }
+
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      inset-inline-start: -20px;
+      top: -20px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      opacity: 0.08;
+      background: currentColor;
+    }
+
+    .stat-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--text-soft);
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+
+    .stat-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .stat-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-soft);
+      font-size: 0.84rem;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card.total { color: var(--primary); }
+    .stat-card.online { color: var(--success); }
+    .stat-card.offline { color: var(--danger); }
+    .stat-card.with-logs { color: var(--info); }
+    .stat-card.no-data { color: var(--warning); }
+    /* --------------------------------------------------------- */
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .input, .select {
+      height: 44px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 0 14px;
+      font-family: inherit;
+      min-width: 180px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input:focus, .select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-soft);
+    }
+
+    .table-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 920px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-elevated);
+      z-index: 2;
+      text-align: right;
+      font-size: 0.88rem;
+      color: var(--text-soft);
+      font-weight: 700;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      font-size: 0.94rem;
+    }
+
+    tbody tr {
+      transition: background 0.18s ease;
+    }
+
+    tbody tr:hover {
+      background: color-mix(in srgb, var(--bg-soft) 70%, transparent);
+    }
+
+    .board-id {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .muted {
+      color: var(--text-soft);
+      font-size: 0.88rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-online {
+      color: var(--success);
+      background: var(--success-soft);
+    }
+
+    .status-offline {
+      color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .status-unknown {
+      color: var(--warning);
+      background: var(--warning-soft);
+    }
+
+    .log-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .json-preview {
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      color: var(--text-soft);
+      direction: ltr;
+      text-align: left;
+    }
+
+    .empty {
+      padding: 42px 20px;
+      text-align: center;
+      color: var(--text-soft);
+    }
+
+    .empty strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.52);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(860px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .modal-body {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .detail-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .detail-item.full {
+      grid-column: 1 / -1;
+    }
+
+    .detail-label {
+      color: var(--text-soft);
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    .detail-value {
+      color: var(--text);
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    pre.json-box {
+      margin: 0;
+      padding: 16px;
+      border-radius: 14px;
+      background: #0f172a;
+      color: #e2e8f0;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.84rem;
+      line-height: 1.9;
+      direction: ltr;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .json-key { color: #93c5fd; }
+    .json-string { color: #86efac; }
+    .json-number { color: #fca5a5; }
+    .json-boolean { color: #fcd34d; }
+    .json-null { color: #c4b5fd; }
+
+    @media (max-width: 1100px) {
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        width: min(100% - 20px, 1400px);
+        padding-top: 16px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-body {
+        grid-template-columns: 1fr;
+      }
+
+      .brand {
+        min-width: 100%;
+      }
+
+      .topbar {
+        align-items: stretch;
+      }
+    }
+
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .detail-btn {
+      padding: 8px 12px;
+      font-size: 0.84rem;
+      border-radius: 999px;
+    }
+
+  </style>
+</head><body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M4 7.5H20M7 4V11M17 4V11M6 20H18C19.1046 20 20 19.1046 20 18V9.5C20 8.39543 19.1046 7.5 18 7.5H6C4.89543 7.5 4 8.39543 4 9.5V18C4 19.1046 4.89543 20 6 20Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>داشبورد مانیتورینگ بوردهای CNC</h1>
+          <p>نمایش وضعیت اتصال بوردها و آخرین لاگ دریافتی از سرور</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="server-badge">
+          <span class="dot"></span>
+          <span>داشبورد فعال</span>
+        </div>
+        <div class="meta" id="lastUpdateText">آخرین بروزرسانی: --</div>
+        <a href="/export-page" class="btn" style="white-space: nowrap;">خروجی اکسل</a>
+        <button class="btn" id="themeToggleBtn">تغییر تم</button>
+        <button class="btn btn-primary" id="refreshBtn">رفرش داده‌ها</button>
+      </div>
+
+    </header>
+
+    <section class="stats">
+      <article class="stat-card total">
+        <div class="stat-card-head">
+          <span class="stat-title">کل بوردها</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="14" y="4" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="3" y="13" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="14" y="13" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-foot">
+          <span>تمام رکوردهای موجود</span>
+        </div>
+      </article>
+
+      <article class="stat-card online">
+        <div class="stat-card-head">
+          <span class="stat-title">بوردهای متصل</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M7 12.5a5 5 0 0 1 10 0M4 9.5a9 9 0 0 1 16 0M10.5 16.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statOnline">0</div>
+        <div class="stat-foot">
+          <span>وضعیت آنلاین</span>
+        </div>
+      </article>
+
+      <article class="stat-card offline">
+        <div class="stat-card-head">
+          <span class="stat-title">قطع ارتباط</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M3 3l18 18M8 8.5a5 5 0 0 1 8 4M4 9.5a9 9 0 0 1 7-3.95M14.5 5.8A9 9 0 0 1 20 9.5M12 16.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statOffline">0</div>
+        <div class="stat-foot">
+          <span>آفلاین / تایم‌اوت</span>
+        </div>
+      </article>
+
+      <article class="stat-card with-logs">
+        <div class="stat-card-head">
+          <span class="stat-title">دارای آخرین لاگ</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3v4M18.36 5.64l-2.83 2.83M21 12h-4M18.36 18.36l-2.83-2.83M12 17v4M8.47 15.53l-2.83 2.83M7 12H3M8.47 8.47 5.64 5.64" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statWithLogs">0</div>
+        <div class="stat-foot">
+          <span>داده دیکد شده موجود است</span>
+        </div>
+      </article>
+
+      <article class="stat-card no-data">
+        <div class="stat-card-head">
+          <span class="stat-title">بدون داده</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statNoData">0</div>
+        <div class="stat-foot">
+          <span>در انتظار دریافت لاگ</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="toolbar">
+      <div class="toolbar-group">
+        <input id="searchInput" class="input" type="text" placeholder="جستجو: شناسه بورد یا IP" />
+        <select id="statusFilter" class="select">
+          <option value="all">همه وضعیت‌ها</option>
+          <option value="online">متصل</option>
+          <option value="offline">قطع ارتباط</option>
+          <option value="withLogs">دارای لاگ</option>
+          <option value="noData">بدون داده</option>
+        </select>
+      </div>
+      <div class="toolbar-group">
+        <div class="meta" id="rowsCountText">0 ردیف</div>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>شناسه بورد</th>
+              <th>IP</th>
+              <th>وضعیت اتصال</th>
+              <th>آخرین مشاهده</th>
+              <th>نوع آخرین لاگ</th>
+              <th>خلاصه داده (فرم / دوره‌ای)</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody id="boardsTableBody">
+            <tr>
+              <td colspan="7">
+                <div class="empty">
+                  <strong>در حال بارگذاری...</strong>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal" id="detailsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">جزئیات بورد</h3>
+        <button class="icon-btn" id="closeModalBtn" aria-label="بستن">×</button>
+      </div>
+      <div class="modal-body">
+          <div class="detail-item">
+            <div class="detail-label">شناسه بورد</div>
+            <div class="detail-value" id="detailBoardId">-</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">IP</div>
+            <div class="detail-value" id="detailIp">-</div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-label">نام پرسنل</div>
+            <div class="detail-value" id="detailPersonnelName">-</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">آخرین مشاهده</div>
+            <div class="detail-value" id="detailLastSeen">-</div>
+          </div>
+          
+          <!-- جایگزین شدن نام قطعه و فرآیند -->
+          <div class="detail-item">
+            <div class="detail-label">نام قطعه</div>
+            <div class="detail-value" id="detailPartName">-</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">فرآیند</div>
+            <div class="detail-value" id="detailProcess">-</div>
+          </div>
+          
+
+          <div class="detail-item full">
+            <div class="detail-label">آخرین داده دیکد شده</div>
+            <pre class="json-box" id="detailLastLogData" dir="ltr" style="text-align: left;"></pre>
+          </div>
+        </div>
+
+    </div>
+  </div>
+</body>
+
+
+<script>
+const state = {
+  boards: [],
+  filteredBoards: [],
+  refreshTimer: null
+};
+
+let el = {};
+
+/* =========================
+   THEME
+========================= */
+
+function initTheme() {
+  const saved = localStorage.getItem("dashboard-theme");
+  if (saved === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const dark = root.classList.toggle("dark");
+  localStorage.setItem("dashboard-theme", dark ? "dark" : "light");
+}
+
+/* =========================
+   HELPERS
+========================= */
+
+function escapeHtml(val) {
+  if (val === null || val === undefined) return "";
+  return String(val)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function nowFa(){
+  return new Date().toLocaleString("fa-IR");
+}
+
+function normalizeText(v){
+  return String(v ?? "").toLowerCase().trim();
+}
+
+/* =========================
+   LOG TYPE MAPPING
+========================= */
+
+const LOG_TYPE_LABELS = {
+  "0x01": "شروع عملیات",
+  "0x02": "ثبت تعداد تولید",
+  "0x03": "پایان / توقف عملیات",
+  "0x04": "ضایعات / دوباره‌کاری",
+  "0x05": "ثبت فرم‌ها"
+};
+
+function normalizeLogType(type) {
+  if (type === null || type === undefined) return "-";
+
+  let value = String(type).trim().toLowerCase();
+
+  if (value === "" || value === "-" || value === "null" || value === "undefined") {
+    return "-";
+  }
+
+  // چک کردن اعداد ساده مثل "1" یا "2"
+  if (/^\d+$/.test(value)) {
+    return "0x" + Number(value).toString(16).padStart(2, "0");
+  }
+
+  // استخراج الگوهای Hex مثل "0x01", "0X1", "error 0x01"
+  const hexMatch = value.match(/0x([0-9a-f]+)/);
+  if (hexMatch) {
+    // گرفتن مقدار بعد از 0x و افزودن 0 در صورت نیاز (مثلاً 1 بشه 01)
+    let hexVal = hexMatch[1];
+    if (hexVal.length === 1) hexVal = "0" + hexVal;
+    return "0x" + hexVal;
+  }
+
+  // چک کردن فرمت هگزادسیمال بدون 0x مثل "01"
+  if (/^[0-9a-f]{1,2}$/.test(value)) {
+    return "0x" + value.padStart(2, "0");
+  }
+
+  return value;
+}
+
+function mapLogType(type) {
+  const normalized = normalizeLogType(type);
+
+  if (normalized === "-") return "-";
+
+  return LOG_TYPE_LABELS[normalized] || `نوع ناشناخته (${normalized})`;
+}
+
+function hasLogType(board) {
+  const normalized = normalizeLogType(board?.last_log_type);
+  return normalized !== "-";
+}
+
+/* =========================
+   DATA HELPERS
+========================= */
+
+function stringifyData(data){
+  if(data === null || data === undefined) return "-";
+  if(typeof data === "string"){
+    try{
+      const p = JSON.parse(data);
+      return JSON.stringify(p,null,2);
+    }catch{
+      return data;
+    }
+  }
+  if(typeof data === "object"){
+    return JSON.stringify(data,null,2);
+  }
+  return String(data);
+}
+
+function hasLogData(board){
+  const d = board?.last_log_data;
+  if(d === null || d === undefined) return false;
+  if(typeof d === "object"){
+    return Object.keys(d).length > 0;
+  }
+  return String(d).trim() !== "";
+}
+
+function isOnline(board){
+  return board?.connection_status === "online";
+}
+
+function getBoardLogTime(board){
+  const d = board?.last_log_data;
+  if(d && typeof d === "object"){
+    const t = d.timestamp || d.time || d.datetime || d.created_at || d.date;
+    if(t){
+      const p = Date.parse(t);
+      if(!Number.isNaN(p)) return p;
+    }
+  }
+  if(board?.last_seen){
+    const p = Date.parse(board.last_seen);
+    if(!Number.isNaN(p)) return p;
+  }
+  return 0;
+}
+
+/* =========================
+   JSON HIGHLIGHT
+========================= */
+
+function syntaxHighlightJson(jsonText){
+  const safe = escapeHtml(jsonText);
+  return safe.replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"\s*:)|("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*")|\b(true|false)\b|\b(null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
+    function(match){
+      let cls="json-number";
+      if(/^"/.test(match)){
+        cls = /:$/.test(match) ? "json-key":"json-string";
+      }
+      else if(/true|false/.test(match)){
+        cls="json-boolean";
+      }
+      else if(/null/.test(match)){
+        cls="json-null";
+      }
+      return `<span class="${cls}">${match}</span>`;
+    }
+  );
+}
+
+/* =========================
+   STATUS HTML
+========================= */
+
+function getStatusHtml(board){
+  if(isOnline(board)){
+    return `<span class="status-badge status-online"><span class="dot"></span>آنلاین</span>`;
+  }
+  return `<span class="status-badge status-offline"><span class="dot"></span>آفلاین</span>`;
+}
+
+/* =========================
+   STATS
+========================= */
+
+function renderStats(){
+  const total = state.boards.length;
+  const online = state.boards.filter(isOnline).length;
+  const withLogs = state.boards.filter(hasLogData).length;
+
+  el.statTotal.textContent = total;
+  el.statOnline.textContent = online;
+  el.statOffline.textContent = total - online;
+  el.statWithLogs.textContent = withLogs;
+  el.statNoData.textContent = total - withLogs;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+function renderTable(){
+  el.tableBody.innerHTML="";
+  el.rowsCountText.textContent = state.filteredBoards.length + " ردیف";
+
+  if(state.filteredBoards.length===0){
+    el.tableBody.innerHTML=`
+    <tr>
+      <td colspan="7">
+        <div class="empty">
+          <strong>داده‌ای یافت نشد</strong>
+        </div>
+      </td>
+    </tr>
+    `;
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+
+  state.filteredBoards.forEach(board=>{
+    const tr = document.createElement("tr");
+    const logType = mapLogType(board.last_log_type);
+    const preview = stringifyData(board.last_log_data);
+
+    tr.innerHTML=`
+      <td><div class="board-id">${escapeHtml(board.device_name)}</div></td>
+      <td><span dir="ltr">${escapeHtml(board.ip_address)}</span></td>
+      <td>${getStatusHtml(board)}</td>
+      <td><span class="muted">${escapeHtml(board.last_seen)}</span></td>
+      <td>
+      ${
+        hasLogType(board)
+        ? `<span class="log-chip">${escapeHtml(logType)}</span>`
+        : `<span class="muted">-</span>`
+      }
+      </td>
+      <td>
+      <div class="json-preview">${escapeHtml(preview)}</div>
+      </td>
+      <td>
+      <button class="btn detail-btn">جزئیات</button>
+      </td>
+    `;
+
+    tr.querySelector(".detail-btn").onclick=()=>openModal(board);
+    frag.appendChild(tr);
+  });
+
+  el.tableBody.appendChild(frag);
+}
+
+/* =========================
+   FILTER
+========================= */
+
+function applyFilters(){
+  const search = normalizeText(el.searchInput.value);
+  const status = el.statusFilter.value;
+
+  state.filteredBoards = state.boards.filter(board=>{
+    const id = normalizeText(board.device_name);
+    const ip = normalizeText(board.ip_address);
+    const type = normalizeText(board.last_log_type);
+    const data = normalizeText(stringifyData(board.last_log_data));
+
+    const searchMatch =
+      !search ||
+      id.includes(search) ||
+      ip.includes(search) ||
+      type.includes(search) ||
+      data.includes(search);
+
+    const statusMatch =
+      status==="all" ||
+      (status==="online" && isOnline(board)) ||
+      (status==="offline" && !isOnline(board)) ||
+      (status==="withLogs" && hasLogData(board)) ||
+      (status==="noData" && !hasLogData(board));
+
+    return searchMatch && statusMatch;
+  });
+
+  renderTable();
+}
+
+/* =========================
+   MODAL
+========================= */
+
+function openModal(board){
+  // بررسی اینکه آیا تاریخچه‌ای وجود دارد یا خیر. اگر بود تاریخچه، در غیر این صورت دیتای تکی
+  const dataToShow = (board.session_logs && board.session_logs.length > 0) 
+                     ? board.session_logs 
+                     : board.last_log_data;
+                     
+  const json = stringifyData(dataToShow); 
+
+  el.detailBoardId.textContent = board.device_name;
+  el.detailIp.textContent = board.ip_address;
+  el.detailLastSeen.textContent = board.last_seen;
+  
+  // -- پیدا کردن نام پرسنل --
+  let personnelName = "نامشخص";
+  let partName = "نامشخص";
+  let processCode = "نامشخص";
+  
+  if (board.session_logs && Array.isArray(board.session_logs)) {
+      let logP = board.session_logs.find(log => log && log.PersonnelName);
+      if (logP) personnelName = logP.PersonnelName;
+
+      let logPart = board.session_logs.find(log => log && log.PartName);
+      if (logPart) partName = logPart.PartName;
+
+      let logProc = board.session_logs.find(log => log && log.Process);
+      if (logProc) processCode = logProc.Process;
+  } 
+  if (personnelName === "نامشخص" && board.last_log_data?.PersonnelName) personnelName = board.last_log_data.PersonnelName;
+  if (partName === "نامشخص" && board.last_log_data?.PartName) partName = board.last_log_data.PartName;
+  if (processCode === "نامشخص" && board.last_log_data?.Process) processCode = board.last_log_data.Process;
+  
+  el.detailPersonnelName.textContent = personnelName;
+  el.detailPartName.textContent = partName;
+  el.detailProcess.textContent = processCode;
+  // -------------------------
+
+  if(json && json !== "-"){
+    el.detailLastLogData.innerHTML = syntaxHighlightJson(json);
+  }else{
+    el.detailLastLogData.textContent="-";
+  }
+
+  el.modal.classList.add("show");
+}
+
+function closeModal(){
+  el.modal.classList.remove("show");
+}
+
+/* =========================
+   FETCH
+========================= */
+
+async function fetchBoards(){
+  try{
+    el.refreshBtn.disabled=true;
+    el.refreshBtn.textContent="در حال دریافت...";
+
+    const res = await fetch("/api/boards",{cache:"no-store"});
+    if(!res.ok){
+      throw new Error("HTTP "+res.status);
+    }
+
+    const data = await res.json();
+
+    state.boards = Object.entries(data || {}).map(([ip,item])=>{
+      return{
+        device_name: item?.device_name || ip, // اضافه شدن این خط
+        board_id:item?.board_id || ip,
+        ip_address:item?.ip || item?.ip_address || ip,
+        connection_status:item?.is_connected ? "online":"offline",
+        last_log_type:item?.last_log_type, 
+        last_log_data:item?.last_log_data ?? {},
+        session_logs: item?.session_logs || [],
+        last_seen:item?.last_seen || "-"
+      };
+    }).sort((a,b)=>getBoardLogTime(b)-getBoardLogTime(a));
+
+    renderStats();
+    applyFilters();
+    el.lastUpdateText.textContent="آخرین بروزرسانی: "+nowFa();
+
+  }
+  catch(err){
+    console.error(err);
+    el.tableBody.innerHTML=`
+      <tr>
+        <td colspan="7">
+          <div class="empty">
+            <strong>خطا در دریافت داده</strong>
+            <span>${escapeHtml(err.message)}</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+  finally{
+    el.refreshBtn.disabled=false;
+    el.refreshBtn.textContent="رفرش داده‌ها";
+  }
+}
+
+/* =========================
+   INIT
+========================= */
+
+document.addEventListener("DOMContentLoaded",()=>{
+  el={
+    tableBody:document.getElementById("boardsTableBody"),
+    refreshBtn:document.getElementById("refreshBtn"),
+    themeToggleBtn:document.getElementById("themeToggleBtn"),
+    lastUpdateText:document.getElementById("lastUpdateText"),
+    rowsCountText:document.getElementById("rowsCountText"),
+    searchInput:document.getElementById("searchInput"),
+    statusFilter:document.getElementById("statusFilter"),
+    modal:document.getElementById("detailsModal"),
+    closeModalBtn:document.getElementById("closeModalBtn"),
+
+    statTotal:document.getElementById("statTotal"),
+    statOnline:document.getElementById("statOnline"),
+    statOffline:document.getElementById("statOffline"),
+    statWithLogs:document.getElementById("statWithLogs"),
+    statNoData:document.getElementById("statNoData"),
+
+    detailBoardId:document.getElementById("detailBoardId"),
+    detailIp:document.getElementById("detailIp"),
+    detailConnection:document.getElementById("detailConnection"),
+    detailLastSeen:document.getElementById("detailLastSeen"),
+    detailLastLogType:document.getElementById("detailLastLogType"),
+    detailPersonnelName:document.getElementById("detailPersonnelName"),
+    detailPartName:document.getElementById("detailPartName"), 
+    detailProcess:document.getElementById("detailProcess"), 
+    detailLastLogData:document.getElementById("detailLastLogData")
+  };
+
+  initTheme();
+
+  el.themeToggleBtn.onclick=toggleTheme;
+  el.refreshBtn.onclick=fetchBoards;
+  el.searchInput.oninput=applyFilters;
+  el.statusFilter.onchange=applyFilters;
+  el.closeModalBtn.onclick=closeModal;
+  el.modal.onclick=(e)=>{
+    if(e.target===el.modal) closeModal();
+  };
+
+  document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape") closeModal();
+  });
+
+  fetchBoards();
+  state.refreshTimer = setInterval(fetchBoards,5000);
+});
+</script>
+</html>

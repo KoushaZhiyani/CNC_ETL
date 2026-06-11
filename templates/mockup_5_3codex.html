@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>داشبورد مانیتورینگ CNC</title>
+
+
+<style>
+
+      @font-face {
+            font-family: "Vazirmatn";
+            src: url("static/fonts/Vazirmatn-Regular.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* وزن متوسط (Medium) - برای هدر جدول و نشان‌ها */
+        @font-face {
+            font-family: "Vazirmatn";
+            src: url("static/fonts/Vazirmatn-Medium.woff2") format("woff2");
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* وزن ضخیم (Bold) - برای عناوین و اعداد اصلی */
+        @font-face {
+            font-family: "Vazirmatn";
+            src: url("static/fonts/Vazirmatn-Bold.woff2") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+:root{
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2:#f0f2f7;
+  --text:#101828;
+  --text-muted:#667085;
+  --border:#e4e7ec;
+  --shadow: 0 10px 30px rgba(16,24,40,0.08);
+  --shadow-soft: 0 4px 14px rgba(16,24,40,0.06);
+  --primary:#2563eb;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --warning:#f59e0b;
+  --info:#0ea5e9;
+  --neutral:#94a3b8;
+  --radius:14px;
+  --radius-sm:10px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+[data-theme="dark"]{
+  --bg:#0b1220;
+  --surface:#0f172a;
+  --surface-2:#111827;
+  --text:#e5e7eb;
+  --text-muted:#94a3b8;
+  --border:#1f2937;
+  --shadow: 0 10px 30px rgba(0,0,0,0.35);
+  --shadow-soft: 0 6px 18px rgba(0,0,0,0.25);
+  --primary:#3b82f6;
+  --success:#22c55e;
+  --danger:#ef4444;
+  --warning:#f59e0b;
+  --info:#38bdf8;
+  --neutral:#64748b;
+}
+
+*{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:"Vazirmatn", Tahoma, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+}
+
+.container{
+  max-width:1200px;
+  margin:0 auto;
+  padding:24px 20px 60px;
+}
+
+/* Topbar */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:linear-gradient(90deg, rgba(37,99,235,0.08), transparent);
+  backdrop-filter:saturate(140%) blur(6px);
+  border-bottom:1px solid var(--border);
+}
+.topbar-inner{
+  max-width:1200px;
+  margin:0 auto;
+  padding:18px 20px;
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand .logo{
+  width:40px; height:40px;
+  border-radius:12px;
+  background:var(--primary);
+  display:grid; place-items:center;
+  color:#fff; font-weight:700;
+  box-shadow:var(--shadow-soft);
+}
+.brand h1{
+  margin:0;
+  font-size:1.1rem;
+  font-weight:700;
+}
+.meta{
+  display:flex; flex-wrap:wrap; gap:10px 18px;
+  align-items:center;
+  color:var(--text-muted);
+  font-size:.9rem;
+}
+.meta .status-pill{
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(22,163,74,.12);
+  color:var(--success);
+  font-weight:600;
+  border:1px solid rgba(22,163,74,.2);
+}
+.actions{
+  display:flex; gap:10px; align-items:center;
+}
+.btn{
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
+  padding:8px 12px;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s ease;
+  display:flex; gap:8px; align-items:center;
+}
+.btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow-soft); }
+.btn.primary{ background:var(--primary); color:#fff; border-color:transparent; }
+.btn.icon{ padding:8px 10px; }
+.icon{
+  width:18px; height:18px; display:inline-block;
+}
+
+/* Summary cards */
+.summary{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns: repeat(5, minmax(0,1fr));
+  gap:14px;
+}
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:var(--shadow-soft);
+}
+.stat{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.stat .label{ color:var(--text-muted); font-size:.85rem; }
+.stat .value{ font-size:1.4rem; font-weight:700; }
+.stat .pill{
+  width:44px; height:44px;
+  border-radius:12px;
+  display:grid; place-items:center;
+  color:#fff;
+}
+.pill.success{ background:var(--success); }
+.pill.danger{ background:var(--danger); }
+.pill.warning{ background:var(--warning); }
+.pill.info{ background:var(--info); }
+.pill.neutral{ background:var(--neutral); }
+
+/* Toolbar */
+.toolbar{
+  margin-top:18px;
+  display:flex; flex-wrap:wrap; gap:12px;
+  align-items:center; justify-content:space-between;
+}
+.search{
+  flex:1 1 280px;
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+}
+.search input{
+  border:none; outline:none; width:100%;
+  background:transparent; color:var(--text);
+  font-size:.95rem;
+}
+.filters{
+  display:flex; gap:8px; flex-wrap:wrap;
+}
+.filter-btn{
+  padding:8px 12px; border-radius:999px;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--text); cursor:pointer; font-weight:600;
+  transition:.2s ease;
+}
+.filter-btn.active{
+  background:var(--primary); color:#fff; border-color:transparent;
+}
+
+/* Table */
+.table-card{ margin-top:14px; }
+.table-wrap{
+  overflow:auto;
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+}
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  text-align:right;
+  background:var(--surface);
+  min-width:840px;
+}
+thead th{
+  position:sticky; top:0;
+  background:var(--surface-2);
+  color:var(--text-muted);
+  font-weight:700;
+  font-size:.85rem;
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
+}
+tbody td{
+  padding:14px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+tbody tr:hover{ background:rgba(37,99,235,0.04); }
+.device-id{ font-weight:700; color:var(--text); }
+.badge{
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:.82rem;
+  font-weight:700;
+  display:inline-flex; align-items:center; gap:6px;
+  border:1px solid transparent;
+}
+.badge.success{ background:rgba(22,163,74,.1); color:var(--success); border-color:rgba(22,163,74,.2); }
+.badge.danger{ background:rgba(220,38,38,.1); color:var(--danger); border-color:rgba(220,38,38,.2); }
+.badge.warning{ background:rgba(245,158,11,.12); color:var(--warning); border-color:rgba(245,158,11,.2); }
+.badge.neutral{ background:rgba(148,163,184,.15); color:var(--neutral); border-color:rgba(148,163,184,.25); }
+
+.log-cell{
+  max-width:360px;
+}
+.code{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:8px 10px;
+  font-family:var(--mono);
+  font-size:.82rem;
+  color:var(--text);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.code .k{ color:#7c3aed; }
+.code .s{ color:#16a34a; }
+.code .n{ color:#ea580c; }
+
+.row-actions .btn{
+  padding:6px 10px;
+  font-size:.85rem;
+}
+
+.empty{
+  padding:24px;
+  text-align:center;
+  color:var(--text-muted);
+}
+
+/* Modal */
+.modal{
+  position:fixed; inset:0; display:none;
+  background:rgba(0,0,0,.45);
+  align-items:center; justify-content:center;
+  z-index:50;
+}
+.modal.active{ display:flex; }
+.modal-card{
+  width:min(720px, 94vw);
+  background:var(--surface);
+  border-radius:16px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.modal-header{
+  padding:16px 18px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.modal-body{
+  padding:18px;
+  display:grid; gap:14px;
+}
+.detail-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:12px;
+}
+.detail{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+}
+.detail .label{ color:var(--text-muted); font-size:.85rem; }
+.detail .value{ font-weight:700; margin-top:4px; }
+
+@media (max-width: 1024px){
+  .summary{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+@media (max-width: 768px){
+  .topbar-inner{ flex-direction:column; align-items:flex-start; }
+  .summary{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .detail-grid{ grid-template-columns: 1fr; }
+}
+@media (max-width: 520px){
+  .summary{ grid-template-columns: 1fr; }
+  table{ min-width:700px; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+<div class="brand">
+<div class="logo">CNC</div>
+<div>
+<h1>داشبورد مانیتورینگ زنده دستگاه‌های CNC</h1>
+<div class="meta">
+<span>وضعیت کلی سرور:</span>
+<span class="status-pill">آنلاین</span>
+<span>آخرین بروزرسانی: <strong id="lastUpdate">1405/02/26 10:15:30</strong></span>
+</div>
+</div>
+</div>
+<div class="actions">
+<button class="btn icon" id="refreshBtn" title="رفرش">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M20 4v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</button>
+<button class="btn" id="themeToggle">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" stroke="currentColor" stroke-width="2"/>
+</svg>
+تغییر تم
+</button>
+<button class="btn primary">داشبورد اصلی</button>
+</div>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="summary" id="summary">
+<div class="card stat">
+<div>
+<div class="label">تعداد کل دستگاه‌ها</div>
+<div class="value" id="totalCount">3</div>
+</div>
+<div class="pill info">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<path d="M4 7h16M4 12h16M4 17h16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+</svg>
+</div>
+</div>
+<div class="card stat">
+<div>
+<div class="label">دستگاه‌های آنلاین</div>
+<div class="value" id="onlineCount">2</div>
+</div>
+<div class="pill success">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<path d="M5 12l4 4L19 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</div>
+</div>
+<div class="card stat">
+<div>
+<div class="label">دستگاه‌های آفلاین</div>
+<div class="value" id="offlineCount">1</div>
+</div>
+<div class="pill danger">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<path d="M6 6l12 12M18 6L6 18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+</svg>
+</div>
+</div>
+<div class="card stat">
+<div>
+<div class="label">در حال کار</div>
+<div class="value" id="runningCount">1</div>
+</div>
+<div class="pill warning">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<path d="M12 6v6l4 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="12" cy="12" r="9" stroke="white" stroke-width="2"/>
+</svg>
+</div>
+</div>
+<div class="card stat">
+<div>
+<div class="label">هشدارها</div>
+<div class="value" id="alertCount">1</div>
+</div>
+<div class="pill neutral">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<path d="M12 9v4m0 4h.01" stroke="white" stroke-width="2" stroke-linecap="round"/>
+<circle cx="12" cy="12" r="9" stroke="white" stroke-width="2"/>
+</svg>
+</div>
+</div>
+  </section>
+
+  <section class="toolbar">
+<div class="search">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+<path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>
+<input type="text" id="searchInput" placeholder="جستجو بر اساس شناسه دستگاه (مثلاً NC87)"/>
+</div>
+<div class="filters">
+<button class="filter-btn active" data-filter="all">همه</button>
+<button class="filter-btn" data-filter="online">متصل</button>
+<button class="filter-btn" data-filter="offline">قطع ارتباط</button>
+</div>
+  </section>
+
+  <section class="table-card card">
+<div class="table-wrap">
+<table id="deviceTable">
+<thead>
+<tr>
+<th>شناسه دستگاه (ID)</th>
+<th>وضعیت اتصال</th>
+<th>آخرین بروزرسانی</th>
+<th>وضعیت ماشین</th>
+<th>آخرین لاگ دیکد شده</th>
+<th>عملیات</th>
+</tr>
+</thead>
+<tbody id="tableBody">
+<!-- Rows injected by JS -->
+</tbody>
+</table>
+<div id="emptyState" class="empty" style="display:none;">هیچ نتیجه‌ای یافت نشد.</div>
+</div>
+  </section>
+
+</main>
+
+<!-- Modal -->
+<div class="modal" id="detailModal">
+  <div class="modal-card">
+<div class="modal-header">
+<strong>جزئیات دستگاه</strong>
+<button class="btn icon" id="closeModal">
+<svg class="icon" viewBox="0 0 24 24" fill="none">
+<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>
+</button>
+</div>
+<div class="modal-body">
+<div class="detail-grid" id="detailGrid"></div>
+<div>
+<div class="label" style="color:var(--text-muted); font-weight:600; margin-bottom:8px;">آخرین لاگ</div>
+<pre class="code" id="detailLog"></pre>
+</div>
+</div>
+  </div>
+</div>
+
+<script>
+const devices = [
+  {
+id: "NC87",
+connection: "online",
+lastUpdate: "1405/02/26 10:15:30",
+machineStatus: "running",
+rpm: 1500,
+partCount: 120,
+shift: 2,
+error: "none",
+log: {"status":"running","part_count":120,"rpm":1500}
+  },
+  {
+id: "NC22",
+connection: "offline",
+lastUpdate: "1405/02/26 09:45:12",
+machineStatus: "idle",
+rpm: 0,
+partCount: 88,
+shift: 1,
+error: "connection_timeout",
+log: {"error":"connection_timeout","last_state":"idle"}
+  },
+  {
+id: "NC45",
+connection: "online",
+lastUpdate: "1405/02/26 10:15:28",
+machineStatus: "stopped",
+rpm: 0,
+partCount: 60,
+shift: 1,
+error: "none",
+log: {"status":"stopped","downtime_factor":"$55/60$","shift":1}
+  }
+];
+
+const tableBody = document.getElementById("tableBody");
+const emptyState = document.getElementById("emptyState");
+
+function badgeHTML(type, text){
+  return `<span class="badge ${type}">${text}</span>`;
+}
+
+function syntaxHighlight(json){
+  let str = JSON.stringify(json, null, 2)
+.replace(/&/g, "&amp;")
+.replace(/</g, "&lt;")
+.replace(/>/g, "&gt;");
+  return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match)=>{
+let cls = "n";
+if (/^"/.test(match)) cls = /:$/.test(match) ? "k" : "s";
+return `<span class="${cls}">${match}</span>`;
+  });
+}
+
+function renderTable(filter="all", search=""){
+  tableBody.innerHTML = "";
+  const filtered = devices.filter(d=>{
+const matchFilter = filter === "all" ? true : (filter === "online" ? d.connection==="online" : d.connection==="offline");
+const matchSearch = d.id.toLowerCase().includes(search.toLowerCase());
+return matchFilter && matchSearch;
+  });
+
+  if(filtered.length === 0){
+emptyState.style.display = "block";
+return;
+  } else {
+emptyState.style.display = "none";
+  }
+
+  filtered.forEach(d=>{
+const connBadge = d.connection==="online" ? badgeHTML("success","متصل") : badgeHTML("danger","قطع ارتباط");
+const machineBadge = d.machineStatus==="running" ? badgeHTML("warning","در حال کار") : (d.machineStatus==="stopped" ? badgeHTML("neutral","متوقف") : badgeHTML("neutral","آماده"));
+const logHTML = `<div class="code">${syntaxHighlight(d.log)}</div>`;
+const tr = document.createElement("tr");
+tr.innerHTML = `
+<td class="device-id">${d.id}</td>
+<td>${connBadge}</td>
+<td>${d.lastUpdate}</td>
+<td>${machineBadge}</td>
+<td class="log-cell">${logHTML}</td>
+<td class="row-actions">
+<button class="btn" data-id="${d.id}">مشاهده جزئیات</button>
+</td>
+`;
+tableBody.appendChild(tr);
+  });
+}
+
+function updateSummary(){
+  const total = devices.length;
+  const online = devices.filter(d=>d.connection==="online").length;
+  const offline = total - online;
+  const running = devices.filter(d=>d.machineStatus==="running").length;
+  const alerts = devices.filter(d=>d.error && d.error!=="none").length;
+
+  document.getElementById("totalCount").textContent = total;
+  document.getElementById("onlineCount").textContent = online;
+  document.getElementById("offlineCount").textContent = offline;
+  document.getElementById("runningCount").textContent = running;
+  document.getElementById("alertCount").textContent = alerts;
+}
+
+function openModal(device){
+  const grid = document.getElementById("detailGrid");
+  grid.innerHTML = `
+<div class="detail"><div class="label">Device ID</div><div class="value">${device.id}</div></div>
+<div class="detail"><div class="label">Connection Status</div><div class="value">${device.connection==="online"?"متصل":"قطع ارتباط"}</div></div>
+<div class="detail"><div class="label">Last Update</div><div class="value">${device.lastUpdate}</div></div>
+<div class="detail"><div class="label">Machine Status</div><div class="value">${device.machineStatus}</div></div>
+<div class="detail"><div class="label">RPM</div><div class="value">${device.rpm}</div></div>
+<div class="detail"><div class="label">Part Count</div><div class="value">${device.partCount}</div></div>
+<div class="detail"><div class="label">Shift</div><div class="value">${device.shift}</div></div>
+<div class="detail"><div class="label">Error State</div><div class="value">${device.error}</div></div>
+  `;
+  document.getElementById("detailLog").innerHTML = syntaxHighlight(device.log);
+  document.getElementById("detailModal").classList.add("active");
+}
+
+document.addEventListener("click", (e)=>{
+  if(e.target.closest(".row-actions .btn")){
+const id = e.target.closest(".btn").dataset.id;
+const device = devices.find(d=>d.id===id);
+if(device) openModal(device);
+  }
+});
+
+document.getElementById("closeModal").addEventListener("click", ()=> {
+  document.getElementById("detailModal").classList.remove("active");
+});
+document.getElementById("detailModal").addEventListener("click", (e)=>{
+  if(e.target.id==="detailModal") e.target.classList.remove("active");
+});
+
+const filterButtons = document.querySelectorAll(".filter-btn");
+filterButtons.forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+filterButtons.forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+renderTable(btn.dataset.filter, document.getElementById("searchInput").value);
+  });
+});
+
+document.getElementById("searchInput").addEventListener("input", (e)=>{
+  const active = document.querySelector(".filter-btn.active").dataset.filter;
+  renderTable(active, e.target.value);
+});
+
+document.getElementById("themeToggle").addEventListener("click", ()=>{
+  const isDark = document.documentElement.getAttribute("data-theme")==="dark";
+  document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+});
+
+document.getElementById("refreshBtn").addEventListener("click", ()=>{
+  const now = new Date();
+  const pad = (n)=> String(n).padStart(2,"0");
+  const fakeJalali = "1405/02/26 " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+  document.getElementById("lastUpdate").textContent = fakeJalali;
+});
+
+updateSummary();
+renderTable();
+</script>
+
+</body>
+</html>

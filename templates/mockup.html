@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>داشبورد مانیتورینگ CNC</title>
+  <style>
+    @font-face {
+    font-family: "Vazirmatn";
+    src: url("/static/fonts/Vazirmatn-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    }
+    @font-face {
+    font-family: "Vazirmatn";
+    src: url("/static/fonts/Vazirmatn-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+    }
+    @font-face {
+    font-family: "Vazirmatn";
+    src: url("/static/fonts/Vazirmatn-SemiBold.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    }
+    @font-face {
+    font-family: "Vazirmatn";
+    src: url("/static/fonts/Vazirmatn-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    }
+    @font-face {
+    font-family: "Vazirmatn";
+    src: url("/static/fonts/Vazirmatn-ExtraBold.woff2") format("woff2");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+    }
+
+    :root {
+      --bg: #f4f7fb;
+      --bg-soft: #eef3f9;
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-solid: #ffffff;
+      --surface-2: #f8fafc;
+      --text: #111827;
+      --text-soft: #6b7280;
+      --text-faint: #94a3b8;
+      --border: rgba(15, 23, 42, 0.08);
+      --border-strong: rgba(15, 23, 42, 0.14);
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 8px 20px rgba(15, 23, 42, 0.05);
+      --primary: #2563eb;
+      --primary-soft: rgba(37, 99, 235, 0.1);
+      --success: #16a34a;
+      --success-soft: rgba(22, 163, 74, 0.12);
+      --danger: #dc2626;
+      --danger-soft: rgba(220, 38, 38, 0.12);
+      --warning: #d97706;
+      --warning-soft: rgba(217, 119, 6, 0.12);
+      --info: #64748b;
+      --info-soft: rgba(100, 116, 139, 0.12);
+      --table-head: #f1f5f9;
+      --backdrop: rgba(15, 23, 42, 0.45);
+      --code-bg: #0f172a;
+      --code-text: #dbeafe;
+      --code-key: #93c5fd;
+      --code-string: #86efac;
+      --code-number: #fcd34d;
+      --code-bool: #f9a8d4;
+      --code-null: #c4b5fd;
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --container: 1440px;
+    }
+
+    body.dark {
+      --bg: #0b1220;
+      --bg-soft: #111827;
+      --surface: rgba(15, 23, 42, 0.82);
+      --surface-solid: #111827;
+      --surface-2: #0f172a;
+      --text: #e5eefb;
+      --text-soft: #94a3b8;
+      --text-faint: #64748b;
+      --border: rgba(148, 163, 184, 0.12);
+      --border-strong: rgba(148, 163, 184, 0.2);
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+      --shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.22);
+      --primary: #60a5fa;
+      --primary-soft: rgba(96, 165, 250, 0.14);
+      --success: #22c55e;
+      --success-soft: rgba(34, 197, 94, 0.14);
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.14);
+      --warning: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.14);
+      --info: #94a3b8;
+      --info-soft: rgba(148, 163, 184, 0.14);
+      --table-head: #0f172a;
+      --backdrop: rgba(2, 6, 23, 0.7);
+      --code-bg: #020617;
+      --code-text: #dbeafe;
+      --code-key: #7dd3fc;
+      --code-string: #86efac;
+      --code-number: #fcd34d;
+      --code-bool: #f9a8d4;
+      --code-null: #c4b5fd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Vazirmatn", Tahoma, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 28%),
+        radial-gradient(circle at top left, rgba(22, 163, 74, 0.05), transparent 24%),
+        var(--bg);
+      color: var(--text);
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app-shell {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      margin-bottom: 24px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      border-radius: var(--radius-xl);
+      padding: 18px 20px;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary-soft), rgba(255,255,255,0.05));
+      border: 1px solid var(--border);
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 1.22rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      margin: 4px 0 0;
+      color: var(--text-soft);
+      font-size: 0.92rem;
+    }
+
+    .topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .meta-chip,
+    .btn,
+    .filter-chip {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-solid);
+      color: var(--text);
+      height: 42px;
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-soft);
+      transition: 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .meta-chip {
+      cursor: default;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .btn:hover,
+    .filter-chip:hover {
+      transform: translateY(-1px);
+      border-color: var(--border-strong);
+    }
+
+    .btn:active,
+    .filter-chip:active {
+      transform: translateY(0);
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22);
+    }
+
+    body.dark .btn.primary {
+      box-shadow: 0 12px 22px rgba(96, 165, 250, 0.18);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      border: 1px solid transparent;
+    }
+
+    .status-pill .dot,
+    .badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+    }
+
+    .status-pill.online,
+    .badge.online {
+      color: var(--success);
+      background: var(--success-soft);
+      border-color: rgba(22, 163, 74, 0.18);
+    }
+
+    .status-pill.online .dot,
+    .badge.online .dot {
+      background: var(--success);
+    }
+
+    .status-pill.offline,
+    .badge.offline {
+      color: var(--danger);
+      background: var(--danger-soft);
+      border-color: rgba(220, 38, 38, 0.18);
+    }
+
+    .status-pill.offline .dot,
+    .badge.offline .dot {
+      background: var(--danger);
+    }
+
+    .badge.warning,
+    .status-pill.warning {
+      color: var(--warning);
+      background: var(--warning-soft);
+      border-color: rgba(217, 119, 6, 0.18);
+    }
+
+    .badge.warning .dot,
+    .status-pill.warning .dot {
+      background: var(--warning);
+    }
+
+    .badge.neutral,
+    .status-pill.neutral {
+      color: var(--info);
+      background: var(--info-soft);
+      border-color: rgba(100, 116, 139, 0.18);
+    }
+
+    .badge.neutral .dot,
+    .status-pill.neutral .dot {
+      background: var(--info);
+    }
+
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      min-height: 132px;
+    }
+
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      inset-inline-start: -20px;
+      top: -20px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      opacity: 0.08;
+      background: currentColor;
+    }
+
+    .stat-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--text-soft);
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+    }
+
+    .stat-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .stat-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-soft);
+      font-size: 0.84rem;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card.total { color: var(--primary); }
+    .stat-card.online { color: var(--success); }
+    .stat-card.offline { color: var(--danger); }
+    .stat-card.running { color: var(--warning); }
+    .stat-card.alerts { color: var(--info); }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .toolbar {
+      padding: 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-right,
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 280px;
+      flex: 1 1 320px;
+      max-width: 460px;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 46px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface-solid);
+      color: var(--text);
+      padding: 0 46px 0 16px;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-soft);
+    }
+
+    .search-icon {
+      position: absolute;
+      inset-inline-start: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-faint);
+      pointer-events: none;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      background: var(--surface-solid);
+      padding: 0 14px;
+      font-weight: 600;
+    }
+
+    .filter-chip.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: rgba(37, 99, 235, 0.2);
+      box-shadow: none;
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 980px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--table-head);
+      color: var(--text-soft);
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-align: right;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: right;
+    }
+
+    tbody tr {
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(148, 163, 184, 0.06);
+    }
+
+    .device-id {
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      font-size: 0.97rem;
+    }
+
+    .subtext {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .machine-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--info-soft);
+      color: var(--info);
+      border: 1px solid rgba(100, 116, 139, 0.16);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .machine-badge.running {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: rgba(22, 163, 74, 0.18);
+    }
+
+    .machine-badge.stopped {
+      background: var(--warning-soft);
+      color: var(--warning);
+      border-color: rgba(217, 119, 6, 0.18);
+    }
+
+    .machine-badge.idle {
+      background: var(--info-soft);
+      color: var(--info);
+    }
+
+    .metric-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .metric-stack strong {
+      font-size: 0.95rem;
+    }
+
+    .log-box {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
+      color: var(--code-text);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      min-width: 280px;
+      max-width: 420px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.78rem;
+      line-height: 1.85;
+      direction: ltr;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .json-key { color: var(--code-key); }
+    .json-string { color: var(--code-string); }
+    .json-number { color: var(--code-number); }
+    .json-boolean { color: var(--code-bool); }
+    .json-null { color: var(--code-null); }
+
+    .row-actions {
+      display: flex;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-solid);
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-weight: 700;
+    }
+
+    .btn-sm:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .empty-state {
+      display: none;
+      padding: 42px 20px 50px;
+      text-align: center;
+      color: var(--text-soft);
+    }
+
+    .empty-state.show {
+      display: block;
+    }
+
+    .empty-visual {
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 16px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-faint);
+    }
+
+    .empty-state h3 {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 1.05rem;
+    }
+
+    .empty-state p {
+      margin: 0;
+      font-size: 0.92rem;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: var(--backdrop);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 50;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(980px, 100%);
+      max-height: min(90vh, 980px);
+      overflow: auto;
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      animation: modalIn 0.22s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      background: var(--surface-solid);
+      z-index: 2;
+    }
+
+    .modal-title h2 {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+    }
+
+    .modal-title p {
+      margin: 0;
+      color: var(--text-soft);
+      font-size: 0.9rem;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      display: inline-grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .detail-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      min-height: 96px;
+    }
+
+    .detail-card .label {
+      color: var(--text-soft);
+      font-size: 0.84rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .detail-card .value {
+      font-size: 1.05rem;
+      font-weight: 800;
+      line-height: 1.6;
+    }
+
+    .detail-card .value.soft {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .detail-log {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-log h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .detail-log p {
+      margin: 0;
+      color: var(--text-soft);
+      font-size: 0.88rem;
+    }
+
+    .detail-log .log-box {
+      min-width: 100%;
+      max-width: 100%;
+      flex: 1;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      color: var(--text-faint);
+      font-size: 0.83rem;
+      text-align: center;
+    }
+
+    .muted {
+      color: var(--text-soft);
+    }
+
+    @media (max-width: 1200px) {
+      .grid-cards {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .modal-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .app-shell {
+        padding: 16px;
+      }
+
+      .topbar {
+        border-radius: 20px;
+      }
+
+      .grid-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .search-box {
+        min-width: 100%;
+        max-width: 100%;
+      }
+
+      .toolbar {
+        align-items: stretch;
+      }
+
+      .toolbar-right,
+      .toolbar-left {
+        width: 100%;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .grid-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .brand {
+        width: 100%;
+      }
+
+      .topbar-meta {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .topbar-meta > * {
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+
+      .toolbar-right,
+      .toolbar-left {
+        justify-content: stretch;
+      }
+
+      .filter-group {
+        width: 100%;
+      }
+
+      .filter-chip {
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+
+      .modal {
+        padding: 12px;
+      }
+
+      .modal-card {
+        border-radius: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <path d="M4 7.5h16M6.5 4v7M17.5 4v7M4 12.5h16M7 20h10a2 2 0 0 0 2-2v-2.5H5V18a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1>پنل مانیتورینگ زنده دستگاه‌های CNC</h1>
+            <p>نمایش لحظه‌ای وضعیت اتصال، عملکرد و لاگ دستگاه‌ها</p>
+          </div>
+        </div>
+
+        <div class="topbar-meta">
+          <div class="meta-chip">
+            <span class="muted">وضعیت سرور:</span>
+            <span id="serverStatus" class="status-pill online">
+              <span class="dot"></span>
+              آنلاین
+            </span>
+          </div>
+
+          <div class="meta-chip">
+            <span class="muted">آخرین بروزرسانی:</span>
+            <strong id="lastUpdated">1405/02/26 10:15:30</strong>
+          </div>
+
+          <button class="btn" id="themeToggle" type="button" aria-label="تغییر تم">
+            <span id="themeIcon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span id="themeLabel">تم تیره</span>
+          </button>
+
+          <button class="btn primary" id="refreshBtn" type="button">
+            <span aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M20 11a8 8 0 1 1-2.34-5.66L20 8M20 4v4h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            بروزرسانی
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="grid-cards" aria-label="خلاصه آماری">
+      <article class="stat-card total">
+        <div class="stat-card-head">
+          <span class="stat-title">کل دستگاه‌ها</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="14" y="4" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="3" y="13" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="14" y="13" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-foot">
+          <span>تمام بوردهای ثبت‌شده</span>
+          <strong id="statTotalFoot">در سیستم</strong>
+        </div>
+      </article>
+
+      <article class="stat-card online">
+        <div class="stat-card-head">
+          <span class="stat-title">دستگاه‌های آنلاین</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M7 12.5a5 5 0 0 1 10 0M4 9.5a9 9 0 0 1 16 0M10.5 16.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statOnline">0</div>
+        <div class="stat-foot">
+          <span>اتصال پایدار</span>
+          <strong id="statOnlinePercent">0%</strong>
+        </div>
+      </article>
+
+      <article class="stat-card offline">
+        <div class="stat-card-head">
+          <span class="stat-title">دستگاه‌های آفلاین</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M3 3l18 18M8 8.5a5 5 0 0 1 8 4M4 9.5a9 9 0 0 1 7-3.95M14.5 5.8A9 9 0 0 1 20 9.5M12 16.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statOffline">0</div>
+        <div class="stat-foot">
+          <span>نیازمند بررسی</span>
+          <strong id="statOfflinePercent">0%</strong>
+        </div>
+      </article>
+
+      <article class="stat-card running">
+        <div class="stat-card-head">
+          <span class="stat-title">در حال کار</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3v4M18.36 5.64l-2.83 2.83M21 12h-4M18.36 18.36l-2.83-2.83M12 17v4M8.47 15.53l-2.83 2.83M7 12H3M8.47 8.47 5.64 5.64" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statRunning">0</div>
+        <div class="stat-foot">
+          <span>ماشین‌های active</span>
+          <strong id="statAvgRpm">میانگین RPM: 0</strong>
+        </div>
+      </article>
+
+      <article class="stat-card alerts">
+        <div class="stat-card-head">
+          <span class="stat-title">هشدارها / خطاها</span>
+          <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statAlerts">0</div>
+        <div class="stat-foot">
+          <span>Timeout / Error state</span>
+          <strong id="statAlertsFoot">قابل پیگیری</strong>
+        </div>
+      </article>
+    </section>
+
+    <main class="panel">
+      <section class="toolbar" aria-label="جستجو و فیلتر">
+        <div class="toolbar-right">
+          <div class="search-box">
+            <span class="search-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+                <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <input id="searchInput" type="text" placeholder="جستجو بر اساس شناسه دستگاه..." autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="toolbar-left">
+          <div class="filter-group" role="tablist" aria-label="فیلتر وضعیت اتصال">
+            <button class="filter-chip active" type="button" data-filter="all">همه</button>
+            <button class="filter-chip" type="button" data-filter="online">متصل</button>
+            <button class="filter-chip" type="button" data-filter="offline">قطع ارتباط</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="table-wrap">
+        <table aria-label="جدول دستگاه‌های CNC">
+          <thead>
+            <tr>
+              <th>شناسه دستگاه</th>
+              <th>وضعیت اتصال</th>
+              <th>آخرین بروزرسانی</th>
+              <th>وضعیت ماشین</th>
+              <th>RPM / تعداد قطعه</th>
+              <th>آخرین لاگ</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-visual" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+            <path d="m20 20-3.5-3.5M8 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>نتیجه‌ای یافت نشد</h3>
+        <p>عبارت جستجو یا فیلتر انتخابی را تغییر دهید.</p>
+      </div>
+    </main>
+
+    <div class="footer-note">
+      بروزرسانی خودکار هر ۳ ثانیه در این نسخه موکاپ غیرفعال است.
+    </div>
+  </div>
+
+  <div class="modal" id="detailModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalDeviceTitle">
+      <div class="modal-header">
+        <div class="modal-title">
+          <h2 id="modalDeviceTitle">جزئیات دستگاه</h2>
+          <p id="modalSubtitle">نمایش اطلاعات کامل دستگاه و آخرین لاگ دریافتی</p>
+        </div>
+        <button class="icon-btn" id="closeModal" type="button" aria-label="بستن">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <section class="detail-grid" id="detailGrid"></section>
+
+        <aside class="detail-log">
+          <h3>آخرین لاگ دیکد شده</h3>
+          <p>نمایش خواناتر ساختار JSON برای بررسی سریع وضعیت دستگاه</p>
+          <pre class="log-box" id="modalLogBox"></pre>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const devices = [
+      {
+        id: "NC87",
+        connectionStatus: "online",
+        connectionLabel: "متصل",
+        lastUpdate: "1405/02/26 10:15:30",
+        machineStatus: "running",
+        machineLabel: "در حال کار",
+        rpm: 1500,
+        partCount: 120,
+        shift: 2,
+        errorState: false,
+        log: {
+          status: "running",
+          part_count: 120,
+          rpm: 1500
+        }
+      },
+      {
+        id: "NC22",
+        connectionStatus: "offline",
+        connectionLabel: "قطع ارتباط",
+        lastUpdate: "1405/02/26 09:45:12",
+        machineStatus: "idle",
+        machineLabel: "بیکار",
+        rpm: 0,
+        partCount: 0,
+        shift: 1,
+        errorState: true,
+        log: {
+          error: "connection_timeout",
+          last_state: "idle"
+        }
+      },
+      {
+        id: "NC45",
+        connectionStatus: "online",
+        connectionLabel: "متصل",
+        lastUpdate: "1405/02/26 10:15:28",
+        machineStatus: "stopped",
+        machineLabel: "متوقف",
+        rpm: 0,
+        partCount: null,
+        shift: 1,
+        errorState: false,
+        log: {
+          status: "stopped",
+          downtime_factor: "$55/60$",
+          shift: 1
+        }
+      }
+    ];
+
+    const state = {
+      filter: "all",
+      search: "",
+      selectedDevice: null
+    };
+
+    const tableBody = document.getElementById("tableBody");
+    const emptyState = document.getElementById("emptyState");
+    const searchInput = document.getElementById("searchInput");
+    const filterButtons = Array.from(document.querySelectorAll(".filter-chip"));
+    const refreshBtn = document.getElementById("refreshBtn");
+    const lastUpdated = document.getElementById("lastUpdated");
+    const detailModal = document.getElementById("detailModal");
+    const closeModalBtn = document.getElementById("closeModal");
+    const detailGrid = document.getElementById("detailGrid");
+    const modalLogBox = document.getElementById("modalLogBox");
+    const modalDeviceTitle = document.getElementById("modalDeviceTitle");
+    const modalSubtitle = document.getElementById("modalSubtitle");
+    const themeToggle = document.getElementById("themeToggle");
+    const themeLabel = document.getElementById("themeLabel");
+    const themeIcon = document.getElementById("themeIcon");
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function syntaxHighlightJson(obj) {
+      const json = JSON.stringify(obj, null, 2);
+      const escaped = escapeHtml(json);
+
+      return escaped.replace(
+        /("(?:\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*")(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?/g,
+        (match, stringToken, colon, booleanToken) => {
+          if (stringToken) {
+            if (colon) {
+              return `<span class="json-key">${stringToken}</span>${colon}`;
+            }
+            return `<span class="json-string">${stringToken}</span>`;
+          }
+          if (booleanToken) {
+            return `<span class="json-boolean">${booleanToken}</span>`;
+          }
+          if (match === "null") {
+            return `<span class="json-null">null</span>`;
+          }
+          return `<span class="json-number">${match}</span>`;
+        }
+      );
+    }
+
+    function getConnectionBadge(status, label) {
+      return `
+        <span class="badge ${status}">
+          <span class="dot"></span>
+          ${label}
+        </span>
+      `;
+    }
+
+    function getMachineBadge(status, label) {
+      const cls = status === "running" ? "running" : status === "stopped" ? "stopped" : "idle";
+      return `<span class="machine-badge ${cls}">${label}</span>`;
+    }
+
+    function formatPartCount(value) {
+      return value === null || value === undefined ? "—" : value.toLocaleString("fa-IR");
+    }
+
+    function formatNumber(value) {
+      return (value ?? 0).toLocaleString("fa-IR");
+    }
+
+    function renderTable() {
+      const filtered = devices.filter(device => {
+        const matchesSearch = device.id.toLowerCase().includes(state.search.toLowerCase());
+        const matchesFilter =
+          state.filter === "all" ? true : device.connectionStatus === state.filter;
+        return matchesSearch && matchesFilter;
+      });
+
+      tableBody.innerHTML = filtered.map(device => `
+        <tr>
+          <td>
+            <span class="device-id">${device.id}</span>
+            <span class="subtext">شیفت ${formatNumber(device.shift)}</span>
+          </td>
+          <td>${getConnectionBadge(device.connectionStatus, device.connectionLabel)}</td>
+          <td>
+            <div class="metric-stack">
+              <strong>${device.lastUpdate}</strong>
+              <span class="subtext">${device.connectionStatus === "online" ? "دریافت داده فعال" : "عدم دریافت اخیر"}</span>
+            </div>
+          </td>
+          <td>${getMachineBadge(device.machineStatus, device.machineLabel)}</td>
+          <td>
+            <div class="metric-stack">
+              <strong>RPM: ${formatNumber(device.rpm)}</strong>
+              <span class="subtext">Part Count: ${formatPartCount(device.partCount)}</span>
+            </div>
+          </td>
+          <td>
+            <pre class="log-box">${syntaxHighlightJson(device.log)}</pre>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="btn-sm" type="button" data-detail="${device.id}">مشاهده جزئیات</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      emptyState.classList.toggle("show", filtered.length === 0);
+    }
+
+    function renderStats() {
+      const total = devices.length;
+      const online = devices.filter(d => d.connectionStatus === "online").length;
+      const offline = devices.filter(d => d.connectionStatus === "offline").length;
+      const running = devices.filter(d => d.machineStatus === "running").length;
+      const alerts = devices.filter(d => d.errorState || d.connectionStatus === "offline").length;
+      const avgRpmSource = devices.filter(d => d.connectionStatus === "online");
+      const avgRpm = avgRpmSource.length
+        ? Math.round(avgRpmSource.reduce((sum, d) => sum + (d.rpm || 0), 0) / avgRpmSource.length)
+        : 0;
+
+      document.getElementById("statTotal").textContent = formatNumber(total);
+      document.getElementById("statOnline").textContent = formatNumber(online);
+      document.getElementById("statOffline").textContent = formatNumber(offline);
+      document.getElementById("statRunning").textContent = formatNumber(running);
+      document.getElementById("statAlerts").textContent = formatNumber(alerts);
+
+      document.getElementById("statOnlinePercent").textContent = `${formatNumber(Math.round((online / total) * 100 || 0))}%`;
+      document.getElementById("statOfflinePercent").textContent = `${formatNumber(Math.round((offline / total) * 100 || 0))}%`;
+      document.getElementById("statAvgRpm").textContent = `میانگین RPM: ${formatNumber(avgRpm)}`;
+      document.getElementById("statTotalFoot").textContent = `${formatNumber(total)} بورد ثبت‌شده`;
+      document.getElementById("statAlertsFoot").textContent = alerts ? "نیازمند پیگیری" : "بدون مورد بحرانی";
+    }
+
+    function openModal(deviceId) {
+      const device = devices.find(d => d.id === deviceId);
+      if (!device) return;
+
+      state.selectedDevice = device;
+      modalDeviceTitle.textContent = `جزئیات دستگاه ${device.id}`;
+      modalSubtitle.textContent = `آخرین بروزرسانی: ${device.lastUpdate}`;
+
+      const errorView = device.errorState
+        ? `<span class="badge warning"><span class="dot"></span>دارای هشدار / خطا</span>`
+        : `<span class="badge online"><span class="dot"></span>بدون خطای فعال</span>`;
+
+      detailGrid.innerHTML = `
+        <div class="detail-card">
+          <span class="label">Device ID</span>
+          <div class="value">${device.id}</div>
+        </div>
+        <div class="detail-card">
+          <span class="label">Connection Status</span>
+          <div class="value soft">${getConnectionBadge(device.connectionStatus, device.connectionLabel)}</div>
+        </div>
+        <div class="detail-card">
+          <span class="label">Last Update</span>
+          <div class="value soft">${device.lastUpdate}</div>
+        </div>
+        <div class="detail-card">
+          <span class="label">Machine Status</span>
+          <div class="value soft">${getMachineBadge(device.machineStatus, device.machineLabel)}</div>
+        </div>
+        <div class="detail-card">
+          <span class="label">RPM</span>
+          <div class="value">${formatNumber(device.rpm)}</div>
+        </div>
+        <div class="detail-card">
+          <span class="label">Part Count</span>
+          <div class="value">${formatPartCount(device.partCount)}</div>
+        </div>
+        <div class="detail-card">
+          <span class="label">Shift</span>
+          <div class="value">${formatNumber(device.shift)}</div>
+        </div>
+        <div class="detail-card">
+          <span class="label">Error State</span>
+          <div class="value soft">${errorView}</div>
+        </div>
+      `;
+
+      modalLogBox.innerHTML = syntaxHighlightJson(device.log);
+      detailModal.classList.add("show");
+      detailModal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+      detailModal.classList.remove("show");
+      detailModal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      state.selectedDevice = null;
+    }
+
+    function setLastUpdatedNow() {
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+      lastUpdated.textContent = formatter.format(now);
+    }
+
+    function applyTheme(theme) {
+      const dark = theme === "dark";
+      document.body.classList.toggle("dark", dark);
+      localStorage.setItem("cnc-dashboard-theme", theme);
+      themeLabel.textContent = dark ? "تم روشن" : "تم تیره";
+      themeIcon.innerHTML = dark
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.56 1.56M17.5 17.5l1.57 1.57M2 12h2.2M19.8 12H22M4.93 19.07l1.56-1.56M17.5 6.5l1.57-1.57" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+
+    searchInput.addEventListener("input", (e) => {
+      state.search = e.target.value.trim();
+      renderTable();
+    });
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.filter = btn.dataset.filter;
+        renderTable();
+      });
+    });
+
+    refreshBtn.addEventListener("click", () => {
+      setLastUpdatedNow();
+      renderStats();
+      renderTable();
+      refreshBtn.style.transform = "translateY(-1px) scale(0.98)";
+      setTimeout(() => {
+        refreshBtn.style.transform = "";
+      }, 160);
+    });
+
+    tableBody.addEventListener("click", (e) => {
+      const button = e.target.closest("[data-detail]");
+      if (!button) return;
+      openModal(button.dataset.detail);
+    });
+
+    closeModalBtn.addEventListener("click", closeModal);
+
+    detailModal.addEventListener("click", (e) => {
+      if (e.target === detailModal) closeModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && detailModal.classList.contains("show")) {
+        closeModal();
+      }
+    });
+
+    themeToggle.addEventListener("click", () => {
+      const isDark = document.body.classList.contains("dark");
+      applyTheme(isDark ? "light" : "dark");
+    });
+
+    (function init() {
+      const savedTheme = localStorage.getItem("cnc-dashboard-theme");
+      const preferredDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      applyTheme(savedTheme || (preferredDark ? "dark" : "light"));
+      renderStats();
+      renderTable();
+    })();
+  </script>
+</body>
+</html>

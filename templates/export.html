@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>خروجی اکسل داده‌ها</title>
+  <style>
+    /* دقیقاً همان استایل‌های index.html شما */
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-Regular.woff2") format("woff2");
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/static/fonts/Vazirmatn-Bold.woff2") format("woff2");
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+    :root {
+      --bg: #f5f7fb; --bg-elevated: #ffffff; --bg-soft: #f0f3f8;
+      --text: #111827; --text-soft: #6b7280;
+      --border: #e5e7eb; --border-strong: #d6dbe4;
+      --primary: #2563eb; --primary-soft: rgba(37, 99, 235, 0.10);
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --radius: 18px;
+    }
+    html.dark {
+      --bg: #0b1220; --bg-elevated: #121a2b; --bg-soft: #0f1727;
+      --text: #e5e7eb; --text-soft: #94a3b8;
+      --border: #1f2937; --border-strong: #334155;
+      --primary: #60a5fa; --primary-soft: rgba(96, 165, 250, 0.14);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: "Vazirmatn", Tahoma, sans-serif; min-height: 100vh; }
+    .container { width: min(800px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 40px; }
+    
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 20px 22px; background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand h1 { margin: 0; font-size: 1.15rem; font-weight: 800; }
+    .brand p { margin: 4px 0 0; color: var(--text-soft); font-size: 0.92rem; }
+    .btn {
+      border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text);
+      padding: 10px 14px; border-radius: 12px; font-family: inherit; font-size: 0.92rem;
+      cursor: pointer; transition: 0.2s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+    }
+    .btn:hover { background: var(--bg-soft); }
+    .btn-primary { background: var(--primary); color: white; border-color: transparent; }
+    .btn-primary:hover { filter: brightness(1.03); background: var(--primary); }
+
+    .form-card {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 30px;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-soft); }
+    .input {
+      width: 100%; height: 44px; border: 1px solid var(--border); background: var(--bg);
+      color: var(--text); border-radius: 12px; padding: 0 14px; font-family: inherit;
+      outline: none; transition: 0.2s ease;
+    }
+    .input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+    .actions { display: flex; gap: 10px; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="brand">
+        <div>
+          <h1>دریافت خروجی داده‌ها</h1>
+          <p>تاریخ شروع و پایان را برای دریافت فایل اکسل مشخص کنید</p>
+        </div>
+      </div>
+      <div>
+        <button class="btn" id="themeToggleBtn">تغییر تم</button>
+        <a href="/" class="btn">بازگشت به داشبورد</a>
+      </div>
+    </header>
+
+    <!-- Form Section -->
+    <section class="form-card">
+      <form action="/api/export-excel" method="GET">
+        <div class="form-group">
+          <label for="start_date">از تاریخ:</label>
+          <input type="date" id="start_date" name="start_date" class="input" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="end_date">تا تاریخ:</label>
+          <input type="date" id="end_date" name="end_date" class="input" required>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+            دانلود فایل اکسل
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    // تنظیم تم مشابه داشبورد
+    function initTheme() {
+      const saved = localStorage.getItem("dashboard-theme");
+      if (saved === "dark") {
+        document.documentElement.classList.add("dark");
+      }
+    }
+    function toggleTheme() {
+      const root = document.documentElement;
+      const dark = root.classList.toggle("dark");
+      localStorage.setItem("dashboard-theme", dark ? "dark" : "light");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initTheme();
+      document.getElementById("themeToggleBtn").onclick = toggleTheme;
+    });
+  </script>
+</body>
+</html>
